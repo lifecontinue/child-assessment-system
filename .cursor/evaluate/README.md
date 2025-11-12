@@ -1,4 +1,22 @@
-# 小学二年级综合评价系统
+# 儿童发展评估系统
+
+本仓库包含两个评估系统：
+
+## 📋 系统列表
+
+### 1. 幼儿发展测评系统（主系统）
+- **入口**：[index.html](index.html)
+- **说明**：适用于幼儿（3-6岁）的发展测评系统
+- **功能**：日常活动记录、AI测评助手、发展趋势分析
+
+### 2. 小学二年级综合评价系统
+- **入口**：[evaluation-system-app.html](evaluation-system-app.html)
+- **说明**：基于2022版新课程标准的小学二年级学生综合素质评价系统
+- **功能**：五大评价领域、评价工具包、三阶段报告、数据可视化
+
+---
+
+## 🎓 小学二年级综合评价系统
 
 基于2022版新课程标准的小学二年级学生综合素质评价系统。
 
@@ -98,20 +116,36 @@
 
 ```
 /
-├── index.html              # 主应用界面
-├── welcome.html            # 欢迎页面
-├── evaluation-system.html  # 评价体系详细说明
-├── app.js                  # 主应用逻辑
-├── styles.css              # 全局样式
-├── report-templates.js     # 报告模板系统
-├── README.md              # 项目说明（本文件）
-└── legacy/                # 旧系统文件（已弃用）
+├── index.html                    # 幼儿发展测评系统（主系统）
+├── app.js                        # 幼儿测评系统逻辑
+├── style.css                     # 幼儿测评系统样式
+├── config.js                     # 配置文件
+├── indicators.json               # 测评指标数据
+│
+├── evaluation-system-app.html    # 小学二年级评价系统
+├── welcome.html                  # 评价系统欢迎页
+├── evaluation-system.html        # 评价体系详细说明
+├── styles.css                    # 评价系统样式
+├── report-templates.js           # 报告模板系统
+│
+├── README.md                     # 项目说明（本文件）
+├── package.json                  # 项目配置
+├── vercel.json                   # Vercel部署配置
+├── supabase-setup.sql            # 数据库脚本
+└── legacy/                       # 备份文件
 ```
 
 ## 🚀 快速访问
 
-- **开始使用**：打开 [welcome.html](welcome.html) 或直接访问 [index.html](index.html)
-- **了解评价体系**：查看 [evaluation-system.html](evaluation-system.html)
+### 幼儿发展测评系统（主系统）
+- **主页面**：[index.html](index.html)
+- **适用年龄**：3-6岁幼儿
+- **特色**：AI测评助手、日常记录、发展趋势
+
+### 小学二年级综合评价系统
+- **欢迎页**：[welcome.html](welcome.html)
+- **主应用**：[evaluation-system-app.html](evaluation-system-app.html)
+- **评价体系说明**：[evaluation-system.html](evaluation-system.html)
 
 ## 💻 本地运行
 

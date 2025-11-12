@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小学二年级综合评价系统</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- 主容器 -->
+    <div class="app-container">
+        <!-- 侧边导航栏 -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2>🎓 评价系统</h2>
+                <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-screen="dashboard">
+                    <span class="nav-icon">🏠</span>
+                    <span class="nav-text">首页</span>
+                </a>
+                <a href="#" class="nav-item" data-screen="subject-assessment">
+                    <span class="nav-icon">📚</span>
+                    <span class="nav-text">学科评价</span>
+                </a>
+                <a href="#" class="nav-item" data-screen="comprehensive-assessment">
+                    <span class="nav-icon">🌟</span>
+                    <span class="nav-text">综合素质</span>
+                </a>
+                <a href="#" class="nav-item" data-screen="tools">
+                    <span class="nav-icon">🛠️</span>
+                    <span class="nav-text">评价工具</span>
+                </a>
+                <a href="#" class="nav-item" data-screen="reports">
+                    <span class="nav-icon">📋</span>
+                    <span class="nav-text">评价报告</span>
+                </a>
+                <a href="#" class="nav-item" data-screen="data-viz">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-text">数据分析</span>
+                </a>
+                <a href="#" class="nav-item" data-screen="students">
+                    <span class="nav-icon">👨‍🎓</span>
+                    <span class="nav-text">学生管理</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="btn-secondary" onclick="showHelp()">
+                    <span>❓</span> 使用帮助
+                </button>
+            </div>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 顶部导航 -->
+            <header class="top-header">
+                <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
+                <div class="header-info">
+                    <h1 id="screenTitle">首页</h1>
+                    <div class="breadcrumb" id="breadcrumb">评价系统</div>
+                </div>
+                <div class="header-actions">
+                    <div class="student-selector">
+                        <select id="currentStudentSelect" onchange="switchStudent()">
+                            <option value="">选择学生</option>
+                        </select>
+                    </div>
+                    <button class="btn-icon" onclick="showNotifications()" title="通知">
+                        🔔
+                    </button>
+                    <button class="btn-icon" onclick="showSettings()" title="设置">
+                        ⚙️
+                    </button>
+                </div>
+            </header>
+
+            <!-- 内容区域 -->
+            <div class="content-area">
+                <!-- 首页 -->
+                <section id="dashboard" class="screen active">
+                    <div class="dashboard-grid">
+                        <!-- 学生概况卡片 -->
+                        <div class="card dashboard-card student-overview">
+                            <div class="card-header">
+                                <h3>👶 学生概况</h3>
+                                <button class="btn-link" onclick="navigateTo('students')">管理</button>
+                            </div>
+                            <div class="card-body">
+                                <div id="studentOverviewContent" class="student-overview-content">
+                                    <p class="empty-state">请先添加学生信息</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 五大领域快速入口 -->
+                        <div class="card dashboard-card domains-card">
+                            <div class="card-header">
+                                <h3>🎯 五大评价领域</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="domains-grid">
+                                    <div class="domain-card" onclick="navigateTo('subject-assessment', 'chinese')">
+                                        <div class="domain-icon">📚</div>
+                                        <div class="domain-name">学科素养</div>
+                                        <div class="domain-weight">权重 50%</div>
+                                    </div>
+                                    <div class="domain-card" onclick="navigateTo('comprehensive-assessment', 'morality')">
+                                        <div class="domain-icon">🌟</div>
+                                        <div class="domain-name">品德发展</div>
+                                        <div class="domain-weight">权重 20%</div>
+                                    </div>
+                                    <div class="domain-card" onclick="navigateTo('comprehensive-assessment', 'health')">
+                                        <div class="domain-icon">💪</div>
+                                        <div class="domain-name">身心健康</div>
+                                        <div class="domain-weight">权重 15%</div>
+                                    </div>
+                                    <div class="domain-card" onclick="navigateTo('comprehensive-assessment', 'aesthetic')">
+                                        <div class="domain-icon">🎨</div>
+                                        <div class="domain-name">审美素养</div>
+                                        <div class="domain-weight">权重 10%</div>
+                                    </div>
+                                    <div class="domain-card" onclick="navigateTo('comprehensive-assessment', 'labor')">
+                                        <div class="domain-icon">🔨</div>
+                                        <div class="domain-name">劳动实践</div>
+                                        <div class="domain-weight">权重 5%</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 最近评价记录 -->
+                        <div class="card dashboard-card recent-assessments">
+                            <div class="card-header">
+                                <h3>📝 最近评价</h3>
+                                <button class="btn-link" onclick="navigateTo('reports')">查看全部</button>
+                            </div>
+                            <div class="card-body">
+                                <div id="recentAssessmentsList" class="recent-list">
+                                    <p class="empty-state">暂无评价记录</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 进度概览 -->
+                        <div class="card dashboard-card progress-overview">
+                            <div class="card-header">
+                                <h3>📊 评价进度</h3>
+                            </div>
+                            <div class="card-body">
+                                <div id="progressOverview" class="progress-overview-content">
+                                    <div class="progress-item">
+                                        <div class="progress-label">
+                                            <span>学期初诊断</span>
+                                            <span id="initialProgress">0%</span>
+                                        </div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" id="initialProgressBar" style="width: 0%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="progress-item">
+                                        <div class="progress-label">
+                                            <span>学期中发展</span>
+                                            <span id="midProgress">0%</span>
+                                        </div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" id="midProgressBar" style="width: 0%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="progress-item">
+                                        <div class="progress-label">
+                                            <span>学期末总结</span>
+                                            <span id="finalProgress">0%</span>
+                                        </div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" id="finalProgressBar" style="width: 0%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 快速操作 -->
+                        <div class="card dashboard-card quick-actions">
+                            <div class="card-header">
+                                <h3>⚡ 快速操作</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="quick-actions-grid">
+                                    <button class="quick-action-btn" onclick="quickAssessment('chinese')">
+                                        <span class="action-icon">📖</span>
+                                        <span class="action-text">语文评价</span>
+                                    </button>
+                                    <button class="quick-action-btn" onclick="quickAssessment('math')">
+                                        <span class="action-icon">🔢</span>
+                                        <span class="action-text">数学评价</span>
+                                    </button>
+                                    <button class="quick-action-btn" onclick="quickAssessment('english')">
+                                        <span class="action-icon">🔤</span>
+                                        <span class="action-text">英语评价</span>
+                                    </button>
+                                    <button class="quick-action-btn" onclick="navigateTo('tools')">
+                                        <span class="action-icon">🛠️</span>
+                                        <span class="action-text">评价工具</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 系统信息 -->
+                        <div class="card dashboard-card system-info">
+                            <div class="card-header">
+                                <h3>ℹ️ 系统信息</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="info-list">
+                                    <div class="info-item">
+                                        <span class="info-label">版本</span>
+                                        <span class="info-value">v1.0.0</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">学期</span>
+                                        <span class="info-value">2024-2025上学期</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">当前周次</span>
+                                        <span class="info-value" id="currentWeek">第1周</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">评价标准</span>
+                                        <span class="info-value">2022版新课标</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 学科评价页面 -->
+                <section id="subject-assessment" class="screen">
+                    <div class="screen-content">
+                        <div class="tabs-container">
+                            <div class="tabs">
+                                <button class="tab active" data-subject="chinese">语文</button>
+                                <button class="tab" data-subject="math">数学</button>
+                                <button class="tab" data-subject="english">英语</button>
+                            </div>
+                        </div>
+                        <div id="subjectAssessmentContent" class="assessment-content">
+                            <!-- 学科评价内容将动态生成 -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 综合素质评价页面 -->
+                <section id="comprehensive-assessment" class="screen">
+                    <div class="screen-content">
+                        <div class="tabs-container">
+                            <div class="tabs">
+                                <button class="tab active" data-domain="morality">品德发展</button>
+                                <button class="tab" data-domain="health">身心健康</button>
+                                <button class="tab" data-domain="aesthetic">审美素养</button>
+                                <button class="tab" data-domain="labor">劳动实践</button>
+                            </div>
+                        </div>
+                        <div id="comprehensiveAssessmentContent" class="assessment-content">
+                            <!-- 综合素质评价内容将动态生成 -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 评价工具页面 -->
+                <section id="tools" class="screen">
+                    <div class="screen-content">
+                        <div class="tools-grid">
+                            <!-- 教师工具 -->
+                            <div class="card tool-category-card">
+                                <div class="card-header">
+                                    <h3>👩‍🏫 教师用工具包</h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="tool-list">
+                                        <div class="tool-item" onclick="openTool('class-heatmap')">
+                                            <div class="tool-icon">📊</div>
+                                            <div class="tool-info">
+                                                <div class="tool-name">课堂发言热力图</div>
+                                                <div class="tool-desc">记录学生发言次数</div>
+                                            </div>
+                                        </div>
+                                        <div class="tool-item" onclick="openTool('homework-microscope')">
+                                            <div class="tool-icon">🔍</div>
+                                            <div class="tool-info">
+                                                <div class="tool-name">作业显微镜评价表</div>
+                                                <div class="tool-desc">检查书写质量</div>
+                                            </div>
+                                        </div>
+                                        <div class="tool-item" onclick="openTool('group-contribution')">
+                                            <div class="tool-icon">👥</div>
+                                            <div class="tool-info">
+                                                <div class="tool-name">小组合作贡献值</div>
+                                                <div class="tool-desc">记录合作表现</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 家长工具 -->
+                            <div class="card tool-category-card">
+                                <div class="card-header">
+                                    <h3>👪 家长用工具包</h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="tool-list">
+                                        <div class="tool-item" onclick="openTool('home-habits')">
+                                            <div class="tool-icon">📝</div>
+                                            <div class="tool-info">
+                                                <div class="tool-name">家庭学习习惯观察表</div>
+                                                <div class="tool-desc">记录家庭学习习惯</div>
+                                            </div>
+                                        </div>
+                                        <div class="tool-item" onclick="openTool('reading-card')">
+                                            <div class="tool-icon">📚</div>
+                                            <div class="tool-info">
+                                                <div class="tool-name">亲子阅读记录卡</div>
+                                                <div class="tool-desc">记录阅读时光</div>
+                                            </div>
+                                        </div>
+                                        <div class="tool-item" onclick="openTool('emotion-meter')">
+                                            <div class="tool-icon">🌡️</div>
+                                            <div class="tool-info">
+                                                <div class="tool-name">情绪温度计量表</div>
+                                                <div class="tool-desc">每日心情记录</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 学生自评工具 -->
+                            <div class="card tool-category-card">
+                                <div class="card-header">
+                                    <h3>👦 学生自评工具</h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="tool-list">
+                                        <div class="tool-item" onclick="openTool('growth-tree')">
+                                            <div class="tool-icon">🌳</div>
+                                            <div class="tool-info">
+                                                <div class="tool-name">"我能行"成长树</div>
+                                                <div class="tool-desc">目标达成记录</div>
+                                            </div>
+                                        </div>
+                                        <div class="tool-item" onclick="openTool('mistake-train')">
+                                            <div class="tool-icon">🚂</div>
+                                            <div class="tool-info">
+                                                <div class="tool-name">错题追踪小火车</div>
+                                                <div class="tool-desc">错题订正管理</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 评价报告页面 -->
+                <section id="reports" class="screen">
+                    <div class="screen-content">
+                        <div class="reports-header">
+                            <button class="btn-primary" onclick="generateReport()">
+                                <span>📄</span> 生成新报告
+                            </button>
+                        </div>
+                        <div id="reportsContent" class="reports-content">
+                            <!-- 报告列表将动态生成 -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 数据分析页面 -->
+                <section id="data-viz" class="screen">
+                    <div class="screen-content">
+                        <div class="viz-grid">
+                            <div class="card viz-card">
+                                <div class="card-header">
+                                    <h3>📈 五维雷达图</h3>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="radarChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="card viz-card">
+                                <div class="card-header">
+                                    <h3>📊 学科发展趋势</h3>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="trendChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 学生管理页面 -->
+                <section id="students" class="screen">
+                    <div class="screen-content">
+                        <div class="students-header">
+                            <button class="btn-primary" onclick="addStudent()">
+                                <span>➕</span> 添加学生
+                            </button>
+                        </div>
+                        <div id="studentsContent" class="students-content">
+                            <!-- 学生列表将动态生成 -->
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- 模态对话框 -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">标题</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- 模态内容将动态生成 -->
+            </div>
+            <div class="modal-footer" id="modalFooter">
+                <!-- 模态按钮将动态生成 -->
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="report-templates.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
+
