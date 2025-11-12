@@ -3,8 +3,9 @@
 // 在 Vercel 中，可以通过构建时注入或运行时从 window 对象读取
 const SUPABASE_CONFIG = {
     // 优先从 window 对象读取（Vercel 环境变量注入）
-    url: window.SUPABASE_URL || process.env.SUPABASE_URL || 'YOUR_SUPABASE_URL',
-    anonKey: window.SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || 'YOUR_SUPABASE_ANON_KEY'
+    // 如果未设置环境变量，使用以下默认值（仅用于开发测试）
+    url: window.SUPABASE_URL || process.env.SUPABASE_URL || 'https://nmkjzhqonmdyghydvdyy.supabase.co',
+    anonKey: window.SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ta2p6aHFvbm1keWdoeWR2ZHl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NDE1NzYsImV4cCI6MjA3ODUxNzU3Nn0.HKcwvEzCjocdGl-jAF0imGCwhDtjh1iqR2N5tNrvubY'
 };
 
 // 初始化 Supabase 客户端
