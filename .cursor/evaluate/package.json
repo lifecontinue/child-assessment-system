@@ -1,0 +1,16 @@
+{
+  "name": "child-assessment-system",
+  "version": "1.0.0",
+  "description": "儿童发展测评系统",
+  "scripts": {
+    "dev": "npx serve .",
+    "build": "node inject-env.js"
+  },
+  "keywords": [
+    "assessment",
+    "child-development"
+  ],
+  "author": "",
+  "license": "MIT"
+}
+

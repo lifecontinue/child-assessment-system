@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>儿童发展测评系统</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <!-- 顶部导航（合并到日常记录页面） -->
+    <nav class="top-nav" id="mainNav" style="display: none;">
+        <div class="nav-content">
+            <h1 class="app-title">儿童发展测评</h1>
+            <button class="nav-btn-mini" id="profileBtn" onclick="showScreen('studentInfoScreen')" title="设置">⚙️</button>
+            <button class="nav-btn-mini" id="logoutBtn" onclick="handleLogout()" title="退出">🚪</button>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <main class="main-content">
+        <!-- 登录/注册页面 -->
+        <section id="authScreen" class="screen active">
+            <div class="auth-container">
+                <div class="auth-card">
+                    <div class="auth-header">
+                        <div class="auth-icon">👶</div>
+                        <h2>儿童发展测评系统</h2>
+                        <p class="auth-subtitle">记录孩子的成长，见证每一个进步</p>
+                    </div>
+                    
+                    <!-- 登录表单 -->
+                    <div id="loginForm" class="auth-form">
+                        <h3>登录</h3>
+                        <div class="form-group">
+                            <label>邮箱</label>
+                            <input type="email" id="loginEmail" placeholder="请输入邮箱" required>
+                        </div>
+                        <div class="form-group">
+                            <label>密码</label>
+                            <input type="password" id="loginPassword" placeholder="请输入密码" required>
+                        </div>
+                        <button type="button" class="btn-primary btn-full" onclick="handleLogin()">
+                            <span id="loginBtnText">登录</span>
+                            <span id="loginBtnLoading" class="loading-spinner" style="display: none;">⏳</span>
+                        </button>
+                        <div class="auth-divider">
+                            <span>或</span>
+                        </div>
+                        <button type="button" class="btn-secondary btn-full" onclick="handleGitHubLogin()">
+                            <span>🔗 使用 GitHub 登录</span>
+                        </button>
+                      
+                    </div>
+                    
+                    <!-- 注册表单 -->
+                    <div id="registerForm" class="auth-form" style="display: none;">
+                        <h3>注册</h3>
+                        <div class="form-group">
+                            <label>邮箱</label>
+                            <input type="email" id="registerEmail" placeholder="请输入邮箱" required>
+                        </div>
+                        <div class="form-group">
+                            <label>密码</label>
+                            <input type="password" id="registerPassword" placeholder="请输入密码（至少6位）" required minlength="6">
+                        </div>
+                        <div class="form-group">
+                            <label>确认密码</label>
+                            <input type="password" id="registerPasswordConfirm" placeholder="请再次输入密码" required>
+                        </div>
+                        <button type="button" class="btn-primary btn-full" onclick="handleRegister()">
+                            <span id="registerBtnText">注册</span>
+                            <span id="registerBtnLoading" class="loading-spinner" style="display: none;">⏳</span>
+                        </button>
+                        <div class="auth-divider">
+                            <span>或</span>
+                        </div>
+                        <button type="button" class="btn-secondary btn-full" onclick="handleGitHubLogin()">
+                            <span>🔗 使用 GitHub 注册</span>
+                        </button>
+                        <div class="auth-switch">
+                            <span>已有账号？</span>
+                            <a href="#" onclick="switchToLogin(); return false;">立即登录</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 欢迎页面 -->
+        <section id="welcomeScreen" class="screen">
+            <div class="welcome-card">
+                <div class="welcome-icon">👶</div>
+                <h2>欢迎使用测评系统</h2>
+                <p class="welcome-text">记录孩子的成长，见证每一个进步</p>
+                <button class="btn-primary" id="startBtn">开始使用</button>
+            </div>
+        </section>
+
+        <!-- 学生信息页面 -->
+        <section id="studentInfoScreen" class="screen">
+            <div class="screen-header">
+                <button class="back-btn" onclick="goBack()">← 返回</button>
+                <h2>学生基本信息</h2>
+            </div>
+            <form id="studentForm" class="form-container">
+                <div class="form-group">
+                    <label>姓名</label>
+                    <input type="text" id="studentName" placeholder="请输入学生姓名" required>
+                </div>
+                <div class="form-group">
+                    <label>性别</label>
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="gender" value="男" checked>
+                            <span>男</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="gender" value="女">
+                            <span>女</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>出生日期</label>
+                    <input type="date" id="birthDate" required>
+                </div>
+                <div class="form-group">
+                    <label>身高 (cm)</label>
+                    <input type="number" id="height" placeholder="请输入身高" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label>体重 (kg)</label>
+                    <input type="number" id="weight" placeholder="请输入体重" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label>备注</label>
+                    <textarea id="studentNotes" placeholder="其他需要记录的信息..." rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn-primary">保存信息</button>
+            </form>
+        </section>
+
+        <!-- 主页（推荐和记录） -->
+        <section id="homeScreen" class="screen">
+            <!-- 简化的学生信息 -->
+            <div class="student-card-mini" id="studentCard">
+                <div class="student-info-mini">
+                    <div class="student-avatar-mini">👶</div>
+                    <div class="student-details-mini">
+                        <span id="displayName">未设置</span>
+                        <span id="displayAge" class="student-age-mini">请先填写学生信息</span>
+                    </div>
+                    <button class="edit-btn-mini" onclick="showScreen('studentInfoScreen')">⚙️</button>
+                </div>
+            </div>
+
+            <!-- 主要入口：日常记录 -->
+            <div class="main-action-card">
+                <button class="main-action-btn" id="dailyRecordBtn" onclick="showScreen('dailyRecordScreen')">
+                    <div class="main-action-icon">📝</div>
+                    <div class="main-action-content">
+                        <div class="main-action-title">记录活动</div>
+                        <div class="main-action-desc">快速记录孩子的日常表现</div>
+                    </div>
+                    <div class="main-action-arrow">→</div>
+                </button>
+            </div>
+
+            <!-- 注意：功能入口已移至日常记录页面，避免重复 -->
+        </section>
+
+        <!-- 测评记录页面（对话式） -->
+        <section id="assessmentScreen" class="screen">
+            <div class="screen-header">
+                <button class="back-btn" onclick="exitAssessment()">← 返回</button>
+                <h2>AI测评助手</h2>
+                <div class="progress-indicator" id="progressIndicator">
+                    <span id="progressText">0/0</span>
+                </div>
+            </div>
+            
+            <!-- 进度条和阶段显示 -->
+            <div class="process-header">
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill" id="progressBarFill"></div>
+                </div>
+                <div class="process-info">
+                    <div class="current-stage" id="currentStage">
+                        <span class="stage-label">当前阶段：</span>
+                        <span class="stage-value" id="stageValue">准备中...</span>
+                    </div>
+                    <div class="domain-progress" id="domainProgress">
+                        <!-- 领域进度将动态生成 -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 对话区域 -->
+            <div class="chat-container" id="chatContainer">
+                <div class="chat-messages" id="chatMessages">
+                    <!-- 对话消息将动态添加 -->
+                </div>
+            </div>
+
+            <!-- 输入区域 -->
+            <div class="chat-input-area" id="chatInputArea">
+                <div class="quick-actions" id="quickActions">
+                    <!-- 快速操作按钮 -->
+                </div>
+                <div class="input-wrapper">
+                    <textarea id="chatInput" placeholder="输入备注或描述..." rows="1"></textarea>
+                    <button class="send-btn" id="sendBtn" onclick="sendMessage()">发送</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 日常记录页面 -->
+        <section id="dailyRecordScreen" class="screen active">
+            <!-- 合并的顶部导航 -->
+            <div class="merged-header">
+                <div class="merged-nav-content">
+                    <h1 class="merged-app-title">日常活动记录</h1>
+                    <button class="nav-btn-mini" onclick="showScreen('studentInfoScreen')" title="设置">⚙️</button>
+                </div>
+            </div>
+            
+            <div class="daily-record-container">
+                <!-- 功能入口（一行） -->
+                <div class="function-row">
+                    <button class="function-btn-compact start-assessment-btn" id="startAssessmentBtnCompact">
+                        <span class="function-icon-compact">📋</span>
+                        <span class="function-title-compact">完整测评</span>
+                    </button>
+                    <button class="function-btn-compact" id="recommendationBtn">
+                        <span class="function-icon-compact">💡</span>
+                        <span class="function-title-compact">推荐</span>
+                    </button>
+                    <button class="function-btn-compact" id="assessmentRecordsBtn">
+                        <span class="function-icon-compact">📊</span>
+                        <span class="function-title-compact">记录</span>
+                    </button>
+                    <button class="function-btn-compact" id="multiAnalysisBtn">
+                        <span class="function-icon-compact">📈</span>
+                        <span class="function-title-compact">趋势</span>
+                    </button>
+                </div>
+
+                <!-- 快速活动选项（可滑动） -->
+                <div class="quick-activity-slider" id="quickActivitySlider">
+                    <!-- 天空动画层 -->
+                    <div class="sky-animation"></div>
+                    <div class="slider-header">
+                        <span class="slider-title">一天的活动</span>
+                        <span class="slider-time" id="currentTimeDisplay">早上</span>
+                    </div>
+                    <div class="activity-slider-container">
+                        <div class="activity-slider-track" id="activitySliderTrack">
+                            <!-- 快速选项将动态生成 -->
+                        </div>
+                    </div>
+                    <div class="slider-indicators" id="sliderIndicators">
+                        <!-- 滑动指示器 -->
+                    </div>
+                </div>
+
+                <!-- 活动描述输入 -->
+                <div class="activity-input-section">
+                    <label class="section-label">📝 描述一下孩子的活动</label>
+                    <div class="input-with-actions">
+                        <textarea 
+                            id="activityDescription" 
+                            class="activity-input" 
+                            placeholder="例如：今天在公园玩了滑梯，能够独立上下，动作很协调..."
+                            rows="3"></textarea>
+                        <div class="input-actions">
+                            <button class="action-btn-secondary" onclick="clearActivityInput()">清空</button>
+                            <button class="btn-primary" id="analyzeActivityBtn" onclick="analyzeActivity()">
+                                <span id="analyzeBtnText">分析</span>
+                                <span id="analyzeBtnLoading" class="loading-spinner" style="display: none;">⏳</span>
+                            </button>
+                            <button class="btn-secondary" id="summaryBtn" onclick="generateSummary()" style="display: none;">
+                                总结
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 匹配的指标 -->
+                <div class="matched-indicators-section" id="matchedIndicatorsSection" style="display: none;">
+                    <div class="section-header">
+                        <h3>🎯 相关指标</h3>
+                        <span class="matched-count" id="matchedCount">0 个指标</span>
+                    </div>
+                    <div class="matched-indicators-list" id="matchedIndicatorsList">
+                        <!-- 匹配的指标将动态生成 -->
+                    </div>
+                    <button class="btn-primary btn-large" id="saveDailyRecordBtn" onclick="saveDailyRecord()" style="display: none;">
+                        保存记录
+                    </button>
+                </div>
+
+                <!-- 最近日常记录 -->
+                <div class="recent-daily-records">
+                    <h3>📅 最近记录</h3>
+                    <div id="recentDailyRecordsList" class="daily-records-list">
+                        <p class="empty-state">暂无日常记录</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 评估结果页面 -->
+        <section id="resultScreen" class="screen">
+            <div class="screen-header">
+                <button class="back-btn" onclick="goBack()">← 返回</button>
+                <h2>评估结果</h2>
+            </div>
+            <div class="result-container" id="resultContainer">
+                <!-- 结果内容由JavaScript动态生成 -->
+            </div>
+        </section>
+
+        <!-- 评估记录列表页面 -->
+        <section id="assessmentRecordsScreen" class="screen">
+            <div class="screen-header">
+                <button class="back-btn" onclick="goBack()">← 返回</button>
+                <h2>评估记录</h2>
+            </div>
+            <div class="records-container" id="recordsContainer">
+                <!-- 记录列表将动态生成 -->
+            </div>
+        </section>
+
+        <!-- 多次评估分析页面 -->
+        <section id="multiAnalysisScreen" class="screen">
+            <div class="screen-header">
+                <button class="back-btn" onclick="goBack()">← 返回</button>
+                <h2>趋势分析</h2>
+            </div>
+            <div class="analysis-container" id="analysisContainer">
+                <!-- 分析内容将动态生成 -->
+            </div>
+        </section>
+    </main>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
+
