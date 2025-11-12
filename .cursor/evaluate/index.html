@@ -35,55 +35,35 @@
                     <!-- 登录表单 -->
                     <div id="loginForm" class="auth-form">
                         <h3>登录</h3>
+                        <div id="loginErrorMsg" class="error-message" style="display: none; margin-bottom: 15px; padding: 10px; background: rgba(255, 0, 0, 0.1); border-radius: 8px; color: var(--danger-color, #ff4444); font-size: 14px;"></div>
                         <div class="form-group">
                             <label>邮箱</label>
-                            <input type="email" id="loginEmail" placeholder="请输入邮箱" required>
+                            <input 
+                                type="email" 
+                                id="loginEmail" 
+                                placeholder="请输入邮箱" 
+                                required 
+                                autocomplete="email"
+                                onkeypress="if(event.key === 'Enter') handleLogin()">
                         </div>
                         <div class="form-group">
                             <label>密码</label>
-                            <input type="password" id="loginPassword" placeholder="请输入密码" required>
+                            <input 
+                                type="password" 
+                                id="loginPassword" 
+                                placeholder="请输入密码" 
+                                required 
+                                autocomplete="current-password"
+                                onkeypress="if(event.key === 'Enter') handleLogin()">
                         </div>
-                        <button type="button" class="btn-primary btn-full" onclick="handleLogin()">
+                        <button type="button" class="btn-primary btn-full" onclick="handleLogin(); return false;" id="loginBtn">
                             <span id="loginBtnText">登录</span>
                             <span id="loginBtnLoading" class="loading-spinner" style="display: none;">⏳</span>
                         </button>
-                        <div class="auth-divider">
-                            <span>或</span>
-                        </div>
-                        <button type="button" class="btn-secondary btn-full" onclick="handleGitHubLogin()">
-                            <span>🔗 使用 GitHub 登录</span>
-                        </button>
-                      
-                    </div>
-                    
-                    <!-- 注册表单 -->
-                    <div id="registerForm" class="auth-form" style="display: none;">
-                        <h3>注册</h3>
-                        <div class="form-group">
-                            <label>邮箱</label>
-                            <input type="email" id="registerEmail" placeholder="请输入邮箱" required>
-                        </div>
-                        <div class="form-group">
-                            <label>密码</label>
-                            <input type="password" id="registerPassword" placeholder="请输入密码（至少6位）" required minlength="6">
-                        </div>
-                        <div class="form-group">
-                            <label>确认密码</label>
-                            <input type="password" id="registerPasswordConfirm" placeholder="请再次输入密码" required>
-                        </div>
-                        <button type="button" class="btn-primary btn-full" onclick="handleRegister()">
-                            <span id="registerBtnText">注册</span>
-                            <span id="registerBtnLoading" class="loading-spinner" style="display: none;">⏳</span>
-                        </button>
-                        <div class="auth-divider">
-                            <span>或</span>
-                        </div>
-                        <button type="button" class="btn-secondary btn-full" onclick="handleGitHubLogin()">
-                            <span>🔗 使用 GitHub 注册</span>
-                        </button>
-                        <div class="auth-switch">
-                            <span>已有账号？</span>
-                            <a href="#" onclick="switchToLogin(); return false;">立即登录</a>
+                        <div class="auth-help-text" style="margin-top: 20px; text-align: center; color: var(--text-secondary, #666); font-size: 13px; line-height: 1.6;">
+                            <p style="margin: 5px 0;">💡 测试账号</p>
+                            <p style="margin: 5px 0; font-weight: 500;">haidagy@gmail.com</p>
+                            <p style="margin: 5px 0; font-weight: 500;">1112crimsonGY</p>
                         </div>
                     </div>
                 </div>
@@ -268,7 +248,7 @@
                 </div>
 
                 <!-- 活动描述输入 -->
-                <div class="activity-input-section">
+                <div class="activity-input-section" id="activityInputSection">
                     <label class="section-label">📝 描述一下孩子的活动</label>
                     <div class="input-with-actions">
                         <textarea 
@@ -281,9 +261,6 @@
                             <button class="btn-primary" id="analyzeActivityBtn" onclick="analyzeActivity()">
                                 <span id="analyzeBtnText">分析</span>
                                 <span id="analyzeBtnLoading" class="loading-spinner" style="display: none;">⏳</span>
-                            </button>
-                            <button class="btn-secondary" id="summaryBtn" onclick="generateSummary()" style="display: none;">
-                                总结
                             </button>
                         </div>
                     </div>

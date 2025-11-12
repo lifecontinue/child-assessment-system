@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // 检查认证状态
 async function checkAuthStatus() {
-    if (!supabase) return;
+    if (!supabase) return false;
     
     try {
         const { data: { session }, error } = await supabase.auth.getSession();
@@ -64,6 +64,8 @@ async function checkAuthStatus() {
         
         if (session && session.user) {
             AppState.user = session.user;
+            // 加载用户配置文件
+            await loadUserProfile();
             return true;
         }
     } catch (error) {
@@ -72,36 +74,121 @@ async function checkAuthStatus() {
     return false;
 }
 
+// 加载用户配置文件
+async function loadUserProfile() {
+    if (!supabase || !AppState.user) return;
+    
+    try {
+        const { data, error } = await supabase
+            .from('user_profiles')
+            .select('*')
+            .eq('id', AppState.user.id)
+            .single();
+        
+        if (error && error.code !== 'PGRST116') {
+            console.error('加载用户配置文件失败:', error);
+        } else if (data) {
+            // 将用户配置文件信息合并到 user 对象
+            AppState.user.profile = convertDbToApp(data);
+        }
+    } catch (error) {
+        console.error('加载用户配置文件失败:', error);
+    }
+}
+
+// 更新用户配置文件
+async function updateUserProfile(updates) {
+    if (!supabase || !AppState.user) return false;
+    
+    try {
+        const dbUpdates = convertAppToDb({
+            ...updates,
+            updated_at: new Date().toISOString()
+        });
+        
+        const { data, error } = await supabase
+            .from('user_profiles')
+            .update(dbUpdates)
+            .eq('id', AppState.user.id)
+            .select()
+            .single();
+        
+        if (error) throw error;
+        
+        if (data) {
+            AppState.user.profile = convertDbToApp(data);
+            return true;
+        }
+    } catch (error) {
+        console.error('更新用户配置文件失败:', error);
+        return false;
+    }
+    return false;
+}
+
 // 处理登录
 async function handleLogin() {
-    const email = document.getElementById('loginEmail').value.trim();
-    const password = document.getElementById('loginPassword').value;
-    const loginBtn = document.getElementById('loginBtnText');
+    console.log('handleLogin 被调用'); // 调试日志
+    
+    const email = document.getElementById('loginEmail')?.value.trim();
+    const password = document.getElementById('loginPassword')?.value;
+    const loginBtn = document.getElementById('loginBtn');
+    const loginBtnText = document.getElementById('loginBtnText');
     const loginLoading = document.getElementById('loginBtnLoading');
+    const errorMsg = document.getElementById('loginErrorMsg');
+    
+    // 隐藏错误消息
+    if (errorMsg) {
+        errorMsg.style.display = 'none';
+    }
     
     if (!email || !password) {
-        showToast('请填写邮箱和密码');
+        const msg = '请填写邮箱和密码';
+        if (errorMsg) {
+            errorMsg.textContent = msg;
+            errorMsg.style.display = 'block';
+        }
+        showToast(msg);
         return;
     }
     
     if (!supabase) {
-        showToast('系统未配置，无法登录');
+        const msg = '系统未配置，无法登录';
+        if (errorMsg) {
+            errorMsg.textContent = msg;
+            errorMsg.style.display = 'block';
+        }
+        showToast(msg);
         return;
     }
     
-    loginBtn.style.display = 'none';
-    loginLoading.style.display = 'inline-block';
+    // 禁用按钮并显示加载状态
+    if (loginBtn) {
+        loginBtn.disabled = true;
+    }
+    if (loginBtnText) {
+        loginBtnText.style.display = 'none';
+    }
+    if (loginLoading) {
+        loginLoading.style.display = 'inline-block';
+    }
     
     try {
+        console.log('正在尝试登录...', email); // 调试日志
         const { data, error } = await supabase.auth.signInWithPassword({
             email,
             password
         });
         
-        if (error) throw error;
+        if (error) {
+            console.error('登录错误:', error); // 调试日志
+            throw error;
+        }
         
         if (data.user) {
             AppState.user = data.user;
+            // 加载用户配置文件
+            await loadUserProfile();
             showToast('登录成功');
             await loadUserData();
             showScreen('dailyRecordScreen', false);
@@ -110,12 +197,29 @@ async function handleLogin() {
         }
     } catch (error) {
         console.error('登录失败:', error);
-        showToast(error.message || '登录失败，请检查邮箱和密码');
+        const errorMessage = error.message || '登录失败，请检查邮箱和密码';
+        
+        // 显示错误消息
+        if (errorMsg) {
+            errorMsg.textContent = errorMessage;
+            errorMsg.style.display = 'block';
+        }
+        showToast(errorMessage);
     } finally {
-        loginBtn.style.display = 'inline';
-        loginLoading.style.display = 'none';
+        // 恢复按钮状态
+        if (loginBtn) {
+            loginBtn.disabled = false;
+        }
+        if (loginBtnText) {
+            loginBtnText.style.display = 'inline';
+        }
+        if (loginLoading) {
+            loginLoading.style.display = 'none';
+        }
     }
 }
+// 确保可被内联 onclick 调用
+window.handleLogin = handleLogin;
 
 // 处理注册
 async function handleRegister() {
@@ -160,6 +264,8 @@ async function handleRegister() {
             showToast('注册成功！请检查邮箱验证链接（如已启用邮箱验证）');
             // 自动登录
             AppState.user = data.user;
+            // 加载用户配置文件（触发器会自动创建）
+            await loadUserProfile();
             await loadUserData();
             showScreen('dailyRecordScreen', false);
             initDailyRecordScreen();
@@ -257,16 +363,17 @@ function setupEventListeners() {
     
     // 监听认证状态变化
     if (supabase) {
-        supabase.auth.onAuthStateChange((event, session) => {
+        supabase.auth.onAuthStateChange(async (event, session) => {
             if (event === 'SIGNED_IN' && session) {
                 AppState.user = session.user;
-                loadUserData().then(() => {
-                    if (document.querySelector('.screen.active')?.id === 'authScreen') {
-                        showScreen('dailyRecordScreen', false);
-                        initDailyRecordScreen();
-                        updateHomeScreen();
-                    }
-                });
+                // 加载用户配置文件
+                await loadUserProfile();
+                await loadUserData();
+                if (document.querySelector('.screen.active')?.id === 'authScreen') {
+                    showScreen('dailyRecordScreen', false);
+                    initDailyRecordScreen();
+                    updateHomeScreen();
+                }
             } else if (event === 'SIGNED_OUT') {
                 AppState.user = null;
             }
@@ -427,6 +534,38 @@ function getDefaultBackScreen() {
     return 'dailyRecordScreen';
 }
 
+// 字段名转换：数据库下划线命名 -> 代码驼峰命名
+function convertDbToApp(data) {
+    if (!data) return data;
+    if (Array.isArray(data)) {
+        return data.map(convertDbToApp);
+    }
+    const converted = {};
+    for (const [key, value] of Object.entries(data)) {
+        // 转换下划线命名到驼峰命名
+        const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+        converted[camelKey] = value;
+    }
+    return converted;
+}
+
+// 字段名转换：代码驼峰命名 -> 数据库下划线命名
+function convertAppToDb(data) {
+    if (!data) return data;
+    const converted = {};
+    for (const [key, value] of Object.entries(data)) {
+        // 如果已经是下划线格式（如 user_id），直接使用
+        if (key.includes('_')) {
+            converted[key] = value;
+        } else {
+            // 转换驼峰命名到下划线命名
+            const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+            converted[snakeKey] = value;
+        }
+    }
+    return converted;
+}
+
 // 加载学生信息
 async function loadStudentInfo() {
     if (supabase && AppState.user) {
@@ -435,12 +574,14 @@ async function loadStudentInfo() {
                 .from('students')
                 .select('*')
                 .eq('user_id', AppState.user.id)
-                .single();
+                .maybeSingle();
             
-            if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+            if (error && error.code !== 'PGRST116' && error.status !== 406) { // 忽略无行返回
                 console.error('加载学生信息失败:', error);
-            } else if (data) {
-                AppState.student = data;
+            } 
+            if (data) {
+                // 转换数据库字段名到应用字段名
+                AppState.student = convertDbToApp(data);
                 updateStudentForm();
                 return;
             }
@@ -478,11 +619,20 @@ async function saveStudentInfo() {
                 .eq('user_id', AppState.user.id)
                 .single();
             
+            // 转换字段名为数据库格式
+            const dbStudent = convertAppToDb({
+                ...student,
+                user_id: AppState.user.id
+            });
+            
             if (existing) {
                 // 更新
                 const { error } = await supabase
                     .from('students')
-                    .update({ ...student, updatedAt: new Date().toISOString() })
+                    .update({ 
+                        ...dbStudent, 
+                        updated_at: new Date().toISOString() 
+                    })
                     .eq('user_id', AppState.user.id);
                 
                 if (error) throw error;
@@ -491,9 +641,8 @@ async function saveStudentInfo() {
                 const { error } = await supabase
                     .from('students')
                     .insert({
-                        ...student,
-                        user_id: AppState.user.id,
-                        createdAt: new Date().toISOString()
+                        ...dbStudent,
+                        created_at: new Date().toISOString()
                     });
                 
                 if (error) throw error;
@@ -527,13 +676,17 @@ function updateStudentForm() {
     
     const s = AppState.student;
     document.getElementById('studentName').value = s.name || '';
-    document.getElementById('birthDate').value = s.birthDate || '';
+    // 处理字段名：支持 birthDate 和 birth_date
+    document.getElementById('birthDate').value = s.birthDate || s.birth_date || '';
     document.getElementById('height').value = s.height || '';
     document.getElementById('weight').value = s.weight || '';
     document.getElementById('studentNotes').value = s.notes || '';
     
     if (s.gender) {
-        document.querySelector(`input[name="gender"][value="${s.gender}"]`).checked = true;
+        const genderRadio = document.querySelector(`input[name="gender"][value="${s.gender}"]`);
+        if (genderRadio) {
+            genderRadio.checked = true;
+        }
     }
 }
 
@@ -561,8 +714,8 @@ function updateHomeScreen() {
     // 更新推荐
     updateRecommendations();
     
-    // 更新最近记录
-    updateRecentRecords();
+    // 更新最近日常记录（如有）
+    updateRecentDailyRecords();
 }
 
 // 显示推荐测评
@@ -871,6 +1024,7 @@ function calculateAge(birthDate) {
 // 更新推荐
 function updateRecommendations() {
     const container = document.getElementById('recommendationContent');
+    if (!container) return;
     if (!AppState.student || !AppState.student.birthDate) {
         container.innerHTML = '<p class="empty-state">请先填写学生信息</p>';
         return;
@@ -933,35 +1087,7 @@ function getRecommendedDomains(age) {
     return domainMap[age] || domainMap[6] || [];
 }
 
-// 更新最近记录
-function updateRecentRecords() {
-    const container = document.getElementById('recentRecordsList');
-    const recent = AppState.assessments.slice(0, 5);
-    
-    if (recent.length === 0) {
-        container.innerHTML = '<p class="empty-state">暂无记录</p>';
-        return;
-    }
-    
-    container.innerHTML = recent.map(assessment => {
-        const date = new Date(assessment.date).toLocaleDateString('zh-CN');
-        const totalIndicators = assessment.results.length;
-        const passedIndicators = assessment.results.filter(r => r.status === '符合').length;
-        const score = totalIndicators > 0 ? ((passedIndicators / totalIndicators) * 100).toFixed(0) : 0;
-        
-        return `
-            <div class="record-item" onclick="viewAssessmentResult('${assessment.id}')">
-                <div class="record-header">
-                    <span class="record-date">${date}</span>
-                    <span class="record-score">${score}%</span>
-                </div>
-                <div class="record-summary">
-                    完成 ${totalIndicators} 项指标，通过 ${passedIndicators} 项
-                </div>
-            </div>
-        `;
-    }).join('');
-}
+// 已移除：更新最近记录（评估）函数，使用日常记录的更新替代（如需要）
 
 // 加载指标数据
 async function loadIndicators() {
@@ -1440,7 +1566,7 @@ function completeAssessment() {
     document.getElementById('stageValue').textContent = '生成报告中...';
     
     // 保存测评结果
-    setTimeout(() => {
+    setTimeout(async () => {
         const assessment = {
             id: Date.now().toString(),
             date: new Date().toISOString(),
@@ -1459,8 +1585,8 @@ function completeAssessment() {
         // 重置状态
         AppState.chatAssessment.isActive = false;
         
-        // 更新主页
-        updateRecentRecords();
+        // 更新主页（如需要）
+        updateRecentDailyRecords();
         
         // 记录当前页面到历史
         AppState.navigationHistory.push('assessmentScreen');
@@ -1488,7 +1614,7 @@ async function exitAssessment() {
             
             await saveAssessmentToDB(assessment);
             AppState.assessments.unshift(assessment);
-            updateRecentRecords();
+            updateRecentDailyRecords();
         }
     }
     
@@ -1530,8 +1656,8 @@ async function saveAssessment() {
     // 重置当前测评状态
     AppState.currentAssessment = null;
     
-    // 更新主页的最近记录
-    updateRecentRecords();
+    // 更新主页的最近日常记录（如有）
+    updateRecentDailyRecords();
     
     showToast('测评结果已保存');
     showAssessmentResult(assessment.id);
@@ -1541,10 +1667,11 @@ async function saveAssessment() {
 async function saveAssessmentToDB(assessment) {
     if (supabase && AppState.user) {
         try {
+            const dbAssessment = convertAppToDb(assessment);
             const { error } = await supabase
                 .from('assessments')
                 .insert({
-                    ...assessment,
+                    ...dbAssessment,
                     user_id: AppState.user.id
                 });
             
@@ -1956,8 +2083,7 @@ function generateSummary() {
     
     story += `\n\n总体评价：在${totalCount}个相关指标中，有${passedCount}个完全符合，整体表现${progressRate >= 70 ? '优秀' : progressRate >= 50 ? '良好' : '有待提升'}。`;
     
-    // 填入输入框
-    const input = document.getElementById('activityDescription');
+    // 填入输入框（重用已声明的 input 变量）
     input.value = story;
     
     // 自动调整高度
@@ -1971,6 +2097,23 @@ function generateSummary() {
     }, 100);
     
     showToast('总结已生成');
+    
+    // 将“总结”按钮变为“分析”按钮
+    const summaryBtnEl = document.getElementById('summaryBtn');
+    const analyzeBtnEl = document.getElementById('analyzeActivityBtn');
+    if (summaryBtnEl) {
+        // 隐藏原“分析”按钮，避免重复
+        if (analyzeBtnEl) {
+            analyzeBtnEl.style.display = 'none';
+        }
+        // 修改按钮外观与行为为“分析”
+        summaryBtnEl.textContent = '分析';
+        summaryBtnEl.classList.remove('btn-secondary');
+        summaryBtnEl.classList.add('btn-primary');
+        summaryBtnEl.onclick = function() {
+            analyzeActivity();
+        };
+    }
 }
 
 // 生成简单总结（基于输入内容，无需分析指标）
@@ -2092,11 +2235,95 @@ function analyzeActivity() {
         // 显示匹配结果
         displayMatchedIndicators(matchedIndicators);
         
+        // 生成 AI 总结视图（不覆盖输入框，提供可关闭的预览）
+        const summaryText = buildSimpleSummaryText(activityText);
+        showSummaryView(summaryText);
+        
         // 恢复按钮状态
         analyzeBtn.disabled = false;
         analyzeBtnText.style.display = 'inline';
         analyzeBtnLoading.style.display = 'none';
     }, 800);
+}
+
+// 仅构建总结文本（不改动输入框）
+function buildSimpleSummaryText(activityText) {
+    let story = activityText.trim();
+    if (!story) return '';
+    if (!story.endsWith('。') && !story.endsWith('，') && !story.endsWith('.') && !story.endsWith('！') && !story.endsWith('？')) {
+        story += '。';
+    }
+    story += '\n\n这是一次有意义的活动记录。';
+    const text = activityText.toLowerCase();
+    const observations = [];
+    if (text.includes('能够') || text.includes('可以') || text.includes('会') || text.includes('独立')) {
+        observations.push('孩子展现了良好的能力');
+    }
+    if (text.includes('协调') || text.includes('灵活') || text.includes('熟练')) {
+        observations.push('动作协调性良好');
+    }
+    if (text.includes('专注') || text.includes('认真') || text.includes('投入')) {
+        observations.push('注意力集中');
+    }
+    if (text.includes('分享') || text.includes('合作') || text.includes('交流')) {
+        observations.push('社交能力有所体现');
+    }
+    if (text.includes('创造') || text.includes('想象') || text.includes('创新')) {
+        observations.push('展现了创造力');
+    }
+    if (text.includes('情绪') || text.includes('开心') || text.includes('愉快')) {
+        observations.push('情绪状态良好');
+    }
+    if (text.includes('语言') || text.includes('表达') || text.includes('说话')) {
+        observations.push('语言表达能力有所体现');
+    }
+    if (observations.length > 0) {
+        story += '\n\n观察要点：';
+        observations.forEach(obs => {
+            story += `\n• ${obs}`;
+        });
+    }
+    story += '\n\n建议继续观察和记录孩子的表现，以便更好地了解其发展状况。';
+    return story;
+}
+
+// 展示 AI 总结视图，替换输入区域，可关闭恢复
+function showSummaryView(summaryText) {
+    const section = document.getElementById('activityInputSection');
+    if (!section) return;
+    // 仅首次保存原始内容
+    if (!section.dataset.originalHtml) {
+        section.dataset.originalHtml = section.innerHTML;
+    }
+    section.innerHTML = `
+        <div class="summary-card">
+            <div class="summary-card-header">
+                <div class="summary-card-title">🤖 AI 总结</div>
+                <button class="summary-close-btn" onclick="closeSummaryView()">关闭</button>
+            </div>
+            <div class="summary-content">${escapeHtml(summaryText).replace(/\\n/g, '<br>')}</div>
+        </div>
+    `;
+}
+
+// 关闭总结视图，恢复原始输入区域
+function closeSummaryView() {
+    const section = document.getElementById('activityInputSection');
+    if (!section) return;
+    if (section.dataset.originalHtml) {
+        section.innerHTML = section.dataset.originalHtml;
+        section.dataset.originalHtml = '';
+    }
+}
+
+// 简单转义，防止意外的 HTML 注入
+function escapeHtml(str) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
 }
 
 // 根据活动描述匹配指标
@@ -2333,10 +2560,11 @@ async function saveDailyRecord() {
 async function saveDailyRecordToDB(dailyRecord) {
     if (supabase && AppState.user) {
         try {
+            const dbDailyRecord = convertAppToDb(dailyRecord);
             const { error } = await supabase
                 .from('daily_records')
                 .insert({
-                    ...dailyRecord,
+                    ...dbDailyRecord,
                     user_id: AppState.user.id
                 });
             
