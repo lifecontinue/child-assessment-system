@@ -1,31 +1,40 @@
-# 环境变量
-.env
-.env.local
-.env.*.local
-
-# 依赖
+# Node modules
 node_modules/
 
-# 构建输出
-.vercel
-dist
-build
-
-# 日志
-*.log
-npm-debug.log*
-
-# 系统文件
-.DS_Store
-Thumbs.db
-
-# IDE
+# 开发工具
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# Excel 文件（可选，如果不想提交）
-*.xlsx
-*.xls
+# 系统文件
+.DS_Store
+Thumbs.db
+desktop.ini
 
+# 临时文件
+*.tmp
+*.bak
+*~
+
+# 日志文件
+*.log
+
+# 环境变量
+.env
+.env.local
+
+# 备份文件
+backup_*/
+
+# 构建输出
+dist/
+build/
+
+# 用户目录（排除用户主目录的文件）
+../../*
+../*.json
+../**/
+
+# 只包含当前项目
+!.gitignore

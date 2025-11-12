@@ -1,152 +1,223 @@
-# 儿童发展测评系统
+# 小学二年级综合评价系统
 
-一个基于 Web 的儿童发展测评系统，支持用户注册、登录、记录和评估儿童发展指标。
+基于2022版新课程标准的小学二年级学生综合素质评价系统。
 
-## 功能特性
+## 功能特点
 
-- 🔐 用户认证（邮箱/密码 + GitHub OAuth）
-- 📝 日常活动记录
-- 📋 完整测评系统
-- 📊 评估记录查看
-- 📈 趋势分析
-- 💾 数据持久化（Supabase + localStorage 后备）
+### 1. 五大评价领域
 
-## 技术栈
+- **学科素养 (50%)** - 语文、数学、英语三科的详细评价
+- **品德发展 (20%)** - 行为规范、责任意识、友善合作、诚实守信
+- **身心健康 (15%)** - 体质健康、运动兴趣、心理适应
+- **审美素养 (10%)** - 艺术感知、表达创作、审美体验
+- **劳动实践 (5%)** - 日常生活劳动、集体劳动
 
-- 前端：HTML5, CSS3, JavaScript (ES6+)
-- 后端：Supabase (PostgreSQL + Auth + Storage)
-- 部署：Vercel
-- OAuth：GitHub
+### 2. 学科评价矩阵
 
-## 快速开始
+#### 语文 (权重 35%)
+- **识字与写字** - 识字量、书写质量、查字典能力
+- **阅读理解** - 朗读、复述故事、课外阅读
+- **表达与写作** - 看图写话、造句、写信
 
-### 1. 设置 Supabase
+#### 数学 (权重 35%)
+- **数与运算** - 口算、竖式计算、乘法口诀
+- **图形与空间** - 角的认识、七巧板
+- **测量与数据** - 长度测量、统计图表
+- **问题解决** - 信息提取、解题方法
 
-1. 在 [Supabase](https://supabase.com) 创建新项目
-2. 获取项目 URL 和 anon key（在项目设置 > API）
-3. 在 Supabase SQL Editor 中执行以下 SQL 创建表结构：
+#### 英语 (权重 30%)
+- **听说能力** - 单词认读、简单对话
+- **模仿与表演** - 英文儿歌、对话表演
+- **学习兴趣** - 课堂参与、配音作业
 
-```sql
--- 学生信息表
-CREATE TABLE students (
-    id BIGSERIAL PRIMARY KEY,
-    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-    name TEXT NOT NULL,
-    gender TEXT,
-    birth_date DATE,
-    height NUMERIC,
-    weight NUMERIC,
-    notes TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    UNIQUE(user_id)
-);
+### 3. 评价工具包
 
--- 测评记录表
-CREATE TABLE assessments (
-    id TEXT PRIMARY KEY,
-    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-    date TIMESTAMPTZ NOT NULL,
-    student_id TEXT,
-    results JSONB NOT NULL,
-    source TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
+#### 教师用工具
+- 📊 课堂发言热力图 - 记录学生发言次数
+- 🔍 作业显微镜评价表 - 检查书写质量
+- 👥 小组合作贡献值 - 记录合作表现
 
--- 日常记录表
-CREATE TABLE daily_records (
-    id TEXT PRIMARY KEY,
-    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-    date TIMESTAMPTZ NOT NULL,
-    activity TEXT NOT NULL,
-    indicators TEXT[],
-    results JSONB NOT NULL,
-    student_id TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
+#### 家长用工具
+- 📝 家庭学习习惯观察表 - 记录家庭学习习惯
+- 📚 亲子阅读记录卡 - 记录阅读时光
+- 🌡️ 情绪温度计量表 - 每日心情记录
 
--- 创建索引
-CREATE INDEX idx_students_user_id ON students(user_id);
-CREATE INDEX idx_assessments_user_id ON assessments(user_id);
-CREATE INDEX idx_daily_records_user_id ON daily_records(user_id);
+#### 学生自评工具
+- 🌳 "我能行"成长树 - 目标达成记录
+- 🚂 错题追踪小火车 - 错题订正管理
+
+### 4. 三阶段评价报告
+
+- **学期初诊断报告** (第3周) - 学习能力基线、习惯现状扫描、兴趣倾向发现
+- **学期中发展报告** (第12周) - 进步雷达图、高光时刻、挑战预警
+- **学期末总结报告** (第20周) - 成长树、典型作品、体质健康曲线
+
+### 5. 评级标准
+
+- ★★★ **优秀** - 达标率≥90%，主动超越课标要求
+- ★★☆ **良好** - 达标率70-89%，基本达成学习目标
+- ★☆☆ **合格** - 达标率60-69%，需要额外指导支持
+- ☆☆☆ **待提高** - 达标率<60%，需制定个性化方案
+
+## 使用指南
+
+### 快速开始
+
+1. **添加学生信息**
+   - 进入"学生管理"页面
+   - 点击"添加学生"按钮
+   - 填写学生基本信息（姓名、性别、出生日期等）
+
+2. **选择评价对象**
+   - 在顶部导航栏选择要评价的学生
+   - 系统会自动加载该学生的评价记录
+
+3. **进行评价**
+   - 进入"学科评价"或"综合素质"页面
+   - 选择对应的评价指标
+   - 填写评价等级和具体表现
+   - 保存评价记录
+
+4. **使用评价工具**
+   - 进入"评价工具"页面
+   - 选择需要的工具（教师用、家长用或学生自评）
+   - 下载模板或在线使用
+
+5. **生成报告**
+   - 进入"评价报告"页面
+   - 点击"生成新报告"
+   - 选择报告类型（学期初/中/末）
+   - 查看或下载报告
+
+6. **查看数据分析**
+   - 进入"数据分析"页面
+   - 查看五维雷达图和发展趋势
+   - 了解学生的整体表现
+
+## 📁 项目结构
+
+```
+/
+├── index.html              # 主应用界面
+├── welcome.html            # 欢迎页面
+├── evaluation-system.html  # 评价体系详细说明
+├── app.js                  # 主应用逻辑
+├── styles.css              # 全局样式
+├── report-templates.js     # 报告模板系统
+├── README.md              # 项目说明（本文件）
+└── legacy/                # 旧系统文件（已弃用）
 ```
 
-4. 在 Supabase 项目设置中启用 GitHub OAuth：
-   - 进入 Authentication > Providers
-   - 启用 GitHub
-   - 配置 GitHub OAuth App（需要 Client ID 和 Secret）
+## 🚀 快速访问
 
-### 2. 配置环境变量
+- **开始使用**：打开 [welcome.html](welcome.html) 或直接访问 [index.html](index.html)
+- **了解评价体系**：查看 [evaluation-system.html](evaluation-system.html)
 
-1. 复制 `.env.example` 为 `.env`（本地开发）或在 Vercel 中设置环境变量
-2. 填入你的 Supabase URL 和 anon key
+## 💻 本地运行
 
-### 3. 本地开发
+### 方法一：直接打开
+在文件浏览器中双击 `welcome.html` 或 `index.html` 文件
 
+### 方法二：使用本地服务器（推荐）
 ```bash
-# 使用简单的 HTTP 服务器
-npx serve .
-
-# 或使用 Python
+# Python
 python -m http.server 8000
+
+# Node.js
+npx http-server -p 8000
 ```
+然后访问：http://localhost:8000/welcome.html
 
-访问 `http://localhost:8000`
+## 技术特点
 
-### 4. 部署到 Vercel
+- **纯前端实现** - 无需服务器，使用浏览器本地存储
+- **响应式设计** - 支持电脑、平板和手机访问
+- **数据持久化** - 使用localStorage保存数据
+- **美观界面** - 现代化UI设计，操作简便
+- **图表可视化** - 使用Chart.js绘制雷达图和趋势图
 
-1. 将代码推送到 GitHub
-2. 在 [Vercel](https://vercel.com) 导入项目
-3. 在 Vercel 项目设置中添加环境变量：
-   - `SUPABASE_URL`
-   - `SUPABASE_ANON_KEY`
-4. 部署完成！
+## 评价节点
 
-## 配置说明
+### 每日评价
+- 作业完成情况
+- 课堂发言次数
+- 行为规范表现
 
-### Supabase 配置
+### 每周评价
+- 周练卷分析
+- 小组合作评价
+- 阅读记录检查
 
-在 `config.js` 中，环境变量会通过 `window.SUPABASE_URL` 和 `window.SUPABASE_ANON_KEY` 注入。
+### 每月评价
+- 单元测试分析
+- 月度进步之星
+- 家长沟通反馈
 
-在 Vercel 中，可以通过以下方式注入：
+### 每学期评价
+- 综合素质报告
+- 体质健康测试
+- 作品集整理
 
-1. 在 Vercel 项目设置中添加环境变量
-2. 在构建时通过 `vercel.json` 或构建脚本注入到 HTML
+## 数据管理
 
-或者直接在 `config.js` 中硬编码（不推荐用于生产环境）。
+系统使用浏览器的localStorage存储数据，包括：
+- 学生基本信息
+- 各领域评价记录
+- 评价报告
+- 系统设置
 
-## 页面流程
+**注意：** 清除浏览器缓存会删除所有数据，建议定期导出备份。
 
-1. **登录/注册页面** (`authScreen`)
-   - 邮箱/密码注册和登录
-   - GitHub OAuth 登录
+## 浏览器兼容性
 
-2. **日常记录页面** (`dailyRecordScreen`)
-   - 快速活动选择
-   - 活动描述和分析
-   - 指标匹配和记录
+- Chrome 80+
+- Firefox 75+
+- Safari 13+
+- Edge 80+
 
-3. **测评页面** (`assessmentScreen`)
-   - 对话式测评流程
-   - 进度跟踪
+## 使用建议
 
-4. **记录查看页面** (`assessmentRecordsScreen`)
-   - 查看历史测评记录
+### 教师
+1. 每天花15分钟记录学生表现
+2. 每周汇总30分钟
+3. 使用班级优化大师批量点评
+4. 定期与家长沟通反馈
 
-5. **趋势分析页面** (`multiAnalysisScreen`)
-   - 多次测评对比分析
+### 家长
+1. 每天5分钟观察记录
+2. 每周1次深度沟通
+3. 利用晚餐时间分享情绪
+4. 睡前进行阅读记录
 
-## 数据存储
+### 学生
+1. 每天更新成长树
+2. 及时追踪错题
+3. 参与自我评价
+4. 树立学习目标
 
-- **Supabase 模式**：数据存储在 Supabase PostgreSQL 数据库中
-- **本地模式**：如果 Supabase 未配置，自动降级到 localStorage
+## 未来计划
 
-## 安全说明
+- [ ] 添加数据导出功能（Excel/PDF）
+- [ ] 集成图表库实现数据可视化
+- [ ] 支持多用户协作
+- [ ] 添加云端存储功能
+- [ ] 开发移动端APP
+- [ ] AI智能评价建议
 
-- Supabase anon key 是公开的，但通过 Row Level Security (RLS) 保护数据
-- 建议在 Supabase 中配置 RLS 策略，确保用户只能访问自己的数据
+## 参考标准
 
-## 许可证
+本系统基于以下标准和文件：
+- 2022版义务教育课程标准
+- 广东省教育厅综合素质评价文件
+- 国家体质健康标准
+- 小学生行为规范
 
-MIT
+## 联系方式
+
+如有问题或建议，欢迎反馈。
+
+## 版权说明
+
+© 2024 小学二年级综合评价系统
+本系统仅供教育教学使用，请勿用于商业用途。
 
