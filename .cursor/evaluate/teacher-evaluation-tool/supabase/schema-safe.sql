@@ -1,5 +1,6 @@
--- Supabase 数据库表结构
+-- Supabase 数据库表结构（安全版本 - 支持重复执行）
 -- 在 Supabase SQL Editor 中执行此脚本
+-- 此版本会先删除已存在的对象再创建，可以安全地重复执行
 
 -- 用户配置文件表（扩展 auth.users 表）
 CREATE TABLE IF NOT EXISTS user_profiles (
@@ -49,7 +50,7 @@ CREATE TABLE IF NOT EXISTS daily_records (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 创建索引
+-- 创建索引（如果不存在）
 CREATE INDEX IF NOT EXISTS idx_user_profiles_id ON user_profiles(id);
 CREATE INDEX IF NOT EXISTS idx_students_user_id ON students(user_id);
 CREATE INDEX IF NOT EXISTS idx_assessments_user_id ON assessments(user_id);
@@ -63,7 +64,7 @@ ALTER TABLE students ENABLE ROW LEVEL SECURITY;
 ALTER TABLE assessments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE daily_records ENABLE ROW LEVEL SECURITY;
 
--- 删除已存在的 RLS 策略（如果存在）- 支持重复执行
+-- 删除已存在的 RLS 策略（如果存在）
 DROP POLICY IF EXISTS "Users can view own profile" ON user_profiles;
 DROP POLICY IF EXISTS "Users can insert own profile" ON user_profiles;
 DROP POLICY IF EXISTS "Users can update own profile" ON user_profiles;
@@ -117,7 +118,7 @@ CREATE POLICY "Users can insert own daily_records" ON daily_records
 CREATE POLICY "Users can update own daily_records" ON daily_records
     FOR UPDATE USING (auth.uid() = user_id);
 
--- 创建函数：自动创建用户配置文件
+-- 创建或替换函数：自动创建用户配置文件
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -132,7 +133,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 创建触发器：新用户注册时自动创建配置文件
+-- 删除并重新创建触发器：新用户注册时自动创建配置文件
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
@@ -140,7 +141,6 @@ CREATE TRIGGER on_auth_user_created
     EXECUTE FUNCTION public.handle_new_user();
 
 -- 开发环境辅助：自动确认邮箱（仅用于开发/测试，不建议生产环境启用）
--- 如需禁用，请注释或删除以下函数与触发器
 CREATE OR REPLACE FUNCTION public.auto_confirm_user_email()
 RETURNS TRIGGER AS $$
 BEGIN

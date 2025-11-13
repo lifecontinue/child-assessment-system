@@ -1,0 +1,12 @@
+{
+  "rules": [
+    "使用 TypeScript 严格模式",
+    "优先使用 Server Components，需要交互再用 Client Components",
+    "所有数据库操作通过 Supabase Edge Functions",
+    "组件文件使用大驼峰命名 (PascalCase)",
+    "API 路由统一放在 app/api 目录",
+    "环境变量前缀统一使用 NEXT_PUBLIC_"
+  ]
+}
+
+
