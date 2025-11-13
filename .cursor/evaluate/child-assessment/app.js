@@ -24,32 +24,102 @@ const AppState = {
 
 // 初始化应用
 document.addEventListener('DOMContentLoaded', async () => {
-    // 初始化 Supabase
-    if (!initSupabase()) {
-        console.warn('Supabase 未配置，将使用本地存储模式');
+    try {
+        // 移除浏览器扩展注入的元素（延迟执行，确保页面内容已加载）
+        setTimeout(() => {
+            // 移除 glmos 相关元素
+            const glmosElements = document.querySelectorAll('#glmos-main-content');
+            glmosElements.forEach(el => {
+                // 确保不是应用本身的元素
+                if (!el.closest('.main-content') && 
+                    !el.closest('.screen') &&
+                    !el.closest('main') &&
+                    !el.closest('nav')) {
+                    el.remove();
+                }
+            });
+        }, 1000);
+        
+        // 使用 MutationObserver 监听 DOM 变化，移除动态添加的扩展元素
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                mutation.addedNodes.forEach((node) => {
+                    if (node.nodeType === 1 && node.id === 'glmos-main-content') {
+                        // 只移除 glmos-main-content，确保不是应用本身的元素
+                        if (!node.closest('.main-content') && 
+                            !node.closest('.screen') &&
+                            !node.closest('main') &&
+                            !node.closest('nav')) {
+                            node.remove();
+                        }
+                    }
+                });
+            });
+        });
+        
+        observer.observe(document.body, {
+            childList: true,
+            subtree: false  // 只监听直接子元素，避免影响应用内容
+        });
+        
+        // 初始化 Supabase
+        if (!initSupabase()) {
+            console.warn('Supabase 未配置，将使用本地存储模式');
+        }
+        
+        // 检查用户登录状态
+        await checkAuthStatus();
+        console.log('用户状态检查完成，用户:', AppState.user ? '已登录' : '未登录');
+        
+        setupEventListeners();
+        console.log('事件监听器设置完成');
+        
+        // 初始化动态背景
+        initDynamicBackground();
+        console.log('动态背景初始化完成');
+        
+        // 如果未登录，显示登录页面
+        if (!AppState.user) {
+            console.log('显示登录页面');
+            showScreen('authScreen', false);
+        } else {
+            // 已登录，加载数据并显示主页面
+            await loadUserData();
+            console.log('用户数据加载完成');
+            
+            // 检查是否是首次登录（没有学生信息）
+            if (!AppState.student) {
+                // 首次登录，显示欢迎页面
+                console.log('显示欢迎页面');
+                showScreen('welcomeScreen', false);
+            } else {
+                // 已有学生信息，直接进入日常记录页面
+                console.log('显示日常记录页面');
+                showScreen('dailyRecordScreen', false);
+                initDailyRecordScreen();
+                updateHomeScreen();
+            }
+        }
+        
+        // 清空导航历史
+        AppState.navigationHistory = [];
+        
+        // 确保至少有一个屏幕显示
+        const activeScreen = document.querySelector('.screen.active');
+        if (!activeScreen) {
+            console.warn('没有活动的屏幕，显示登录页面');
+            showScreen('authScreen', false);
+        }
+        
+        console.log('页面初始化完成');
+    } catch (error) {
+        console.error('页面初始化错误:', error);
+        // 确保至少显示登录页面
+        const authScreen = document.getElementById('authScreen');
+        if (authScreen) {
+            authScreen.classList.add('active');
+        }
     }
-    
-    // 检查用户登录状态
-    await checkAuthStatus();
-    
-    setupEventListeners();
-    
-    // 初始化动态背景
-    initDynamicBackground();
-    
-    // 如果未登录，显示登录页面
-    if (!AppState.user) {
-        showScreen('authScreen', false);
-    } else {
-        // 已登录，加载数据并显示主页面
-        await loadUserData();
-        showScreen('dailyRecordScreen', false);
-        initDailyRecordScreen();
-        updateHomeScreen();
-    }
-    
-    // 清空导航历史
-    AppState.navigationHistory = [];
 });
 
 // ==================== 认证相关函数 ====================
@@ -60,7 +130,16 @@ async function checkAuthStatus() {
     
     try {
         const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) throw error;
+        if (error) {
+            // 如果是认证错误，清除会话
+            if (error.message && error.message.includes('sign in')) {
+                console.warn('会话已过期，需要重新登录');
+                await supabase.auth.signOut();
+                AppState.user = null;
+                return false;
+            }
+            throw error;
+        }
         
         if (session && session.user) {
             AppState.user = session.user;
@@ -70,6 +149,15 @@ async function checkAuthStatus() {
         }
     } catch (error) {
         console.error('检查认证状态失败:', error);
+        // 如果认证失败，清除会话
+        if (supabase) {
+            try {
+                await supabase.auth.signOut();
+            } catch (e) {
+                // 忽略登出错误
+            }
+        }
+        AppState.user = null;
     }
     return false;
 }
@@ -85,14 +173,47 @@ async function loadUserProfile() {
             .eq('id', AppState.user.id)
             .single();
         
-        if (error && error.code !== 'PGRST116') {
-            console.error('加载用户配置文件失败:', error);
+        if (error) {
+            // 如果是认证错误，清除会话
+            if (error.message && (error.message.includes('Please sign in again') || 
+                                  error.message.includes('JWT') ||
+                                  error.message.includes('sign in'))) {
+                console.warn('认证已过期，清除会话');
+                await supabase.auth.signOut();
+                AppState.user = null;
+                if (document.querySelector('.screen.active')?.id !== 'authScreen') {
+                    showScreen('authScreen', false);
+                    showToast('会话已过期，请重新登录');
+                }
+                return;
+            }
+            // 其他错误（如记录不存在）可以忽略
+            if (error.code !== 'PGRST116') {
+                console.error('加载用户配置文件失败:', error);
+            }
         } else if (data) {
             // 将用户配置文件信息合并到 user 对象
             AppState.user.profile = convertDbToApp(data);
         }
     } catch (error) {
         console.error('加载用户配置文件失败:', error);
+        // 如果是认证相关错误，清除会话
+        if (error.message && (error.message.includes('Please sign in again') || 
+                              error.message.includes('JWT') ||
+                              error.message.includes('sign in'))) {
+            if (supabase) {
+                try {
+                    await supabase.auth.signOut();
+                    AppState.user = null;
+                    if (document.querySelector('.screen.active')?.id !== 'authScreen') {
+                        showScreen('authScreen', false);
+                        showToast('会话已过期，请重新登录');
+                    }
+                } catch (e) {
+                    // 忽略登出错误
+                }
+            }
+        }
     }
 }
 
@@ -191,9 +312,17 @@ async function handleLogin() {
             await loadUserProfile();
             showToast('登录成功');
             await loadUserData();
-            showScreen('dailyRecordScreen', false);
-            initDailyRecordScreen();
-            updateHomeScreen();
+            
+            // 检查是否是首次登录（没有学生信息）
+            if (!AppState.student) {
+                // 首次登录，显示欢迎页面
+                showScreen('welcomeScreen', false);
+            } else {
+                // 已有学生信息，直接进入日常记录页面
+                showScreen('dailyRecordScreen', false);
+                initDailyRecordScreen();
+                updateHomeScreen();
+            }
         }
     } catch (error) {
         console.error('登录失败:', error);
@@ -370,12 +499,45 @@ function setupEventListeners() {
                 await loadUserProfile();
                 await loadUserData();
                 if (document.querySelector('.screen.active')?.id === 'authScreen') {
-                    showScreen('dailyRecordScreen', false);
-                    initDailyRecordScreen();
-                    updateHomeScreen();
+                    // 检查是否是首次登录（没有学生信息）
+                    if (!AppState.student) {
+                        // 首次登录，显示欢迎页面
+                        showScreen('welcomeScreen', false);
+                    } else {
+                        // 已有学生信息，直接进入日常记录页面
+                        showScreen('dailyRecordScreen', false);
+                        initDailyRecordScreen();
+                        updateHomeScreen();
+                    }
                 }
-            } else if (event === 'SIGNED_OUT') {
-                AppState.user = null;
+            } else if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
+                if (event === 'SIGNED_OUT') {
+                    AppState.user = null;
+                } else if (event === 'TOKEN_REFRESHED' && session) {
+                    // 令牌刷新成功，更新用户信息
+                    AppState.user = session.user;
+                }
+            }
+        });
+        
+        // 监听认证错误
+        window.addEventListener('unhandledrejection', (event) => {
+            if (event.reason && event.reason.message && 
+                (event.reason.message.includes('Please sign in again') || 
+                 event.reason.message.includes('sign in'))) {
+                console.warn('检测到认证错误，清除会话');
+                event.preventDefault();
+                if (supabase) {
+                    supabase.auth.signOut().then(() => {
+                        AppState.user = null;
+                        if (document.querySelector('.screen.active')?.id !== 'authScreen') {
+                            showScreen('authScreen', false);
+                            showToast('会话已过期，请重新登录');
+                        }
+                    }).catch(() => {
+                        // 忽略错误
+                    });
+                }
             }
         });
     }
@@ -485,6 +647,7 @@ function showScreen(screenId, addToHistory = true) {
     const targetScreen = document.getElementById(screenId);
     if (targetScreen) {
         targetScreen.classList.add('active');
+        console.log('屏幕已切换:', screenId, '显示状态:', window.getComputedStyle(targetScreen).display);
         
         // 添加到历史记录（如果需要）
         if (addToHistory && currentScreenId && currentScreenId !== screenId) {
@@ -494,6 +657,8 @@ function showScreen(screenId, addToHistory = true) {
                 AppState.navigationHistory.shift();
             }
         }
+    } else {
+        console.error('找不到屏幕元素:', screenId);
     }
 }
 
@@ -2235,15 +2400,98 @@ function analyzeActivity() {
         // 显示匹配结果
         displayMatchedIndicators(matchedIndicators);
         
-        // 生成 AI 总结视图（不覆盖输入框，提供可关闭的预览）
-        const summaryText = buildSimpleSummaryText(activityText);
-        showSummaryView(summaryText);
+        // 显示加载中的总结视图
+        showSummaryView('正在生成 AI 总结，请稍候...', true);
+        
+        // 调用 DeepSeek API 生成 AI 总结
+        generateSummaryWithDeepSeek(activityText, matchedIndicators).then(summaryText => {
+            showSummaryView(summaryText, false);
+        }).catch(error => {
+            console.error('生成 AI 总结失败:', error);
+            // 如果 API 调用失败，使用简单的文本生成作为后备
+            const summaryText = buildSimpleSummaryText(activityText);
+            showSummaryView(summaryText, false);
+            showToast('AI 总结生成失败，已使用简单总结');
+        });
         
         // 恢复按钮状态
         analyzeBtn.disabled = false;
         analyzeBtnText.style.display = 'inline';
         analyzeBtnLoading.style.display = 'none';
     }, 800);
+}
+
+// 使用 DeepSeek API 生成总结
+async function generateSummaryWithDeepSeek(activityText, matchedIndicators = []) {
+    const config = window.DEEPSEEK_CONFIG;
+    
+    // 检查 API key 是否配置
+    if (!config || !config.apiKey) {
+        console.warn('DeepSeek API key 未配置，使用简单总结');
+        return buildSimpleSummaryText(activityText);
+    }
+    
+    // 构建提示词
+    let prompt = `请根据以下儿童活动描述，生成一份专业、温暖、有教育意义的总结。总结应该：
+1. 简洁明了地概括活动内容
+2. 突出孩子的表现和进步
+3. 指出可能涉及的发展领域
+4. 给出积极的观察建议
+5. 语言要温暖、鼓励，适合家长阅读
+
+活动描述：${activityText}`;
+
+    // 如果有匹配的指标，添加到提示词中
+    if (matchedIndicators && matchedIndicators.length > 0) {
+        prompt += `\n\n相关发展指标：\n`;
+        matchedIndicators.slice(0, 5).forEach((indicator, index) => {
+            prompt += `${index + 1}. ${indicator.name}（${indicator.domain}）：${indicator.description}\n`;
+        });
+    }
+    
+    prompt += `\n\n请生成一份200-300字的总结，使用中文，语言要自然流畅。`;
+    
+    try {
+        const response = await fetch(config.apiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${config.apiKey}`
+            },
+            body: JSON.stringify({
+                model: config.model,
+                messages: [
+                    {
+                        role: 'system',
+                        content: '你是一位专业的儿童发展评估专家，擅长根据活动描述生成温暖、专业、有教育意义的总结。'
+                    },
+                    {
+                        role: 'user',
+                        content: prompt
+                    }
+                ],
+                temperature: 0.7,
+                max_tokens: 500
+            })
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error?.message || `API 请求失败: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.choices && data.choices.length > 0 && data.choices[0].message) {
+            return data.choices[0].message.content.trim();
+        } else {
+            throw new Error('API 返回格式异常');
+        }
+    } catch (error) {
+        console.error('DeepSeek API 调用失败:', error);
+        // 如果 API 调用失败，返回简单总结
+        return buildSimpleSummaryText(activityText);
+    }
 }
 
 // 仅构建总结文本（不改动输入框）
@@ -2288,20 +2536,26 @@ function buildSimpleSummaryText(activityText) {
 }
 
 // 展示 AI 总结视图，替换输入区域，可关闭恢复
-function showSummaryView(summaryText) {
+function showSummaryView(summaryText, isLoading = false) {
     const section = document.getElementById('activityInputSection');
     if (!section) return;
     // 仅首次保存原始内容
     if (!section.dataset.originalHtml) {
         section.dataset.originalHtml = section.innerHTML;
     }
+    
+    const contentClass = isLoading ? 'summary-content loading' : 'summary-content';
+    const content = isLoading 
+        ? `<div style="text-align: center; padding: 20px;"><div class="loading-spinner" style="display: inline-block; margin-right: 10px;">⏳</div>${escapeHtml(summaryText)}</div>`
+        : escapeHtml(summaryText).replace(/\n/g, '<br>');
+    
     section.innerHTML = `
         <div class="summary-card">
             <div class="summary-card-header">
                 <div class="summary-card-title">🤖 AI 总结</div>
                 <button class="summary-close-btn" onclick="closeSummaryView()">关闭</button>
             </div>
-            <div class="summary-content">${escapeHtml(summaryText).replace(/\\n/g, '<br>')}</div>
+            <div class="${contentClass}">${content}</div>
         </div>
     `;
 }
@@ -2428,6 +2682,12 @@ function displayMatchedIndicators(indicators) {
     const count = document.getElementById('matchedCount');
     const saveBtn = document.getElementById('saveDailyRecordBtn');
     
+    // 检查必要元素是否存在
+    if (!section || !list || !count) {
+        console.error('无法找到匹配指标显示区域');
+        return;
+    }
+    
     // 显示区域
     section.style.display = 'block';
     count.textContent = `${indicators.length} 个指标`;
@@ -2460,11 +2720,18 @@ function displayMatchedIndicators(indicators) {
     }).join('');
     
     // 显示保存按钮和总结按钮
-    saveBtn.style.display = 'block';
-    document.getElementById('summaryBtn').style.display = 'block';
+    if (saveBtn) {
+        saveBtn.style.display = 'block';
+    }
+    const summaryBtn = document.getElementById('summaryBtn');
+    if (summaryBtn) {
+        summaryBtn.style.display = 'block';
+    }
     
     // 滚动到匹配区域
-    section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    if (section) {
+        section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
 }
 
 // 设置日常记录中的指标状态
@@ -2545,10 +2812,22 @@ async function saveDailyRecord() {
     };
     
     // 清空输入
-    document.getElementById('activityDescription').value = '';
-    document.getElementById('matchedIndicatorsSection').style.display = 'none';
-    document.getElementById('saveDailyRecordBtn').style.display = 'none';
-    document.getElementById('summaryBtn').style.display = 'none';
+    const activityInput = document.getElementById('activityDescription');
+    if (activityInput) {
+        activityInput.value = '';
+    }
+    const matchedSection = document.getElementById('matchedIndicatorsSection');
+    if (matchedSection) {
+        matchedSection.style.display = 'none';
+    }
+    const saveBtn = document.getElementById('saveDailyRecordBtn');
+    if (saveBtn) {
+        saveBtn.style.display = 'none';
+    }
+    const summaryBtn = document.getElementById('summaryBtn');
+    if (summaryBtn) {
+        summaryBtn.style.display = 'none';
+    }
     
     // 更新显示
     updateRecentDailyRecords();

@@ -2,330 +2,353 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>儿童发展测评系统</title>
-    <link rel="stylesheet" href="style.css">
-    <!-- Supabase JS Client -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>教育测评系统 - 首页</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', '微软雅黑', 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: pulse 15s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.95;
+            position: relative;
+            z-index: 1;
+        }
+
+        .content {
+            padding: 60px 40px;
+        }
+
+        .intro {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .intro h2 {
+            font-size: 2.2em;
+            color: #667eea;
+            margin-bottom: 20px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+
+        .intro p {
+            font-size: 1.15em;
+            color: #666;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.8;
+        }
+
+        .projects {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+
+        .project-card {
+            background: linear-gradient(to bottom, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 20px;
+            padding: 45px 40px;
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid transparent;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .project-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transform: scaleX(0);
+            transition: transform 0.4s ease;
+        }
+
+        .project-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.2);
+            border-color: #667eea;
+        }
+
+        .project-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .project-icon {
+            font-size: 4.5em;
+            margin-bottom: 25px;
+            display: inline-block;
+            transition: transform 0.3s ease;
+        }
+
+        .project-card:hover .project-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .project-card h3 {
+            font-size: 1.9em;
+            color: #667eea;
+            margin-bottom: 18px;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+        }
+
+        .project-card p {
+            color: #666;
+            font-size: 1.05em;
+            line-height: 1.8;
+            margin-bottom: 25px;
+        }
+
+        .project-features {
+            list-style: none;
+            text-align: left;
+            margin-top: 25px;
+            padding: 0;
+        }
+
+        .project-features li {
+            padding: 10px 0;
+            color: #555;
+            font-size: 0.98em;
+            line-height: 1.6;
+            transition: color 0.3s ease;
+        }
+
+        .project-card:hover .project-features li {
+            color: #333;
+        }
+
+        .project-features li:before {
+            content: "✓ ";
+            color: #667eea;
+            font-weight: bold;
+            margin-right: 10px;
+            font-size: 1.1em;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-size: 1em;
+            font-weight: 500;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 20px;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .footer {
+            background: linear-gradient(to bottom, #f8f9fa 0%, #ffffff 100%);
+            padding: 35px 30px;
+            text-align: center;
+            color: #666;
+            border-top: 1px solid #e9ecef;
+            font-size: 0.95em;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .header {
+                padding: 40px 25px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .header p {
+                font-size: 1em;
+            }
+
+            .content {
+                padding: 40px 25px;
+            }
+
+            .intro h2 {
+                font-size: 1.6em;
+            }
+
+            .intro p {
+                font-size: 1em;
+            }
+
+            .projects {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                margin-top: 30px;
+            }
+
+            .project-card {
+                padding: 35px 25px;
+            }
+
+            .project-icon {
+                font-size: 3.5em;
+            }
+
+            .project-card h3 {
+                font-size: 1.5em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                padding: 30px 20px;
+            }
+
+            .header h1 {
+                font-size: 1.6em;
+            }
+
+            .content {
+                padding: 30px 20px;
+            }
+
+            .project-card {
+                padding: 30px 20px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <!-- 顶部导航（合并到日常记录页面） -->
-    <nav class="top-nav" id="mainNav" style="display: none;">
-        <div class="nav-content">
-            <h1 class="app-title">儿童发展测评</h1>
-            <button class="nav-btn-mini" id="profileBtn" onclick="showScreen('studentInfoScreen')" title="设置">⚙️</button>
-            <button class="nav-btn-mini" id="logoutBtn" onclick="handleLogout()" title="退出">🚪</button>
+    <div class="container">
+        <div class="header">
+            <h1>🎓 教育测评系统</h1>
+            <p>专业的儿童发展与学生评估解决方案</p>
         </div>
-    </nav>
 
-    <!-- 主内容区 -->
-    <main class="main-content">
-        <!-- 登录/注册页面 -->
-        <section id="authScreen" class="screen active">
-            <div class="auth-container">
-                <div class="auth-card">
-                    <div class="auth-header">
-                        <div class="auth-icon">👶</div>
-                        <h2>儿童发展测评系统</h2>
-                        <p class="auth-subtitle">记录孩子的成长，见证每一个进步</p>
-                    </div>
-                    
-                    <!-- 登录表单 -->
-                    <div id="loginForm" class="auth-form">
-                        <h3>登录</h3>
-                        <div id="loginErrorMsg" class="error-message" style="display: none; margin-bottom: 15px; padding: 10px; background: rgba(255, 0, 0, 0.1); border-radius: 8px; color: var(--danger-color, #ff4444); font-size: 14px;"></div>
-                        <div class="form-group">
-                            <label>邮箱</label>
-                            <input 
-                                type="email" 
-                                id="loginEmail" 
-                                placeholder="请输入邮箱" 
-                                required 
-                                autocomplete="email"
-                                onkeypress="if(event.key === 'Enter') handleLogin()">
-                        </div>
-                        <div class="form-group">
-                            <label>密码</label>
-                            <input 
-                                type="password" 
-                                id="loginPassword" 
-                                placeholder="请输入密码" 
-                                required 
-                                autocomplete="current-password"
-                                onkeypress="if(event.key === 'Enter') handleLogin()">
-                        </div>
-                        <button type="button" class="btn-primary btn-full" onclick="handleLogin(); return false;" id="loginBtn">
-                            <span id="loginBtnText">登录</span>
-                            <span id="loginBtnLoading" class="loading-spinner" style="display: none;">⏳</span>
-                        </button>
-                        <div class="auth-help-text" style="margin-top: 20px; text-align: center; color: var(--text-secondary, #666); font-size: 13px; line-height: 1.6;">
-                            <p style="margin: 5px 0;">💡 测试账号</p>
-                            <p style="margin: 5px 0; font-weight: 500;">haidagy@gmail.com</p>
-                            <p style="margin: 5px 0; font-weight: 500;">1112crimsonGY</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- 欢迎页面 -->
-        <section id="welcomeScreen" class="screen">
-            <div class="welcome-card">
-                <div class="welcome-icon">👶</div>
-                <h2>欢迎使用测评系统</h2>
-                <p class="welcome-text">记录孩子的成长，见证每一个进步</p>
-                <button class="btn-primary" id="startBtn">开始使用</button>
-            </div>
-        </section>
-
-        <!-- 学生信息页面 -->
-        <section id="studentInfoScreen" class="screen">
-            <div class="screen-header">
-                <button class="back-btn" onclick="goBack()">← 返回</button>
-                <h2>学生基本信息</h2>
-            </div>
-            <form id="studentForm" class="form-container">
-                <div class="form-group">
-                    <label>姓名</label>
-                    <input type="text" id="studentName" placeholder="请输入学生姓名" required>
-                </div>
-                <div class="form-group">
-                    <label>性别</label>
-                    <div class="radio-group">
-                        <label class="radio-label">
-                            <input type="radio" name="gender" value="男" checked>
-                            <span>男</span>
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="gender" value="女">
-                            <span>女</span>
-                        </label>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>出生日期</label>
-                    <input type="date" id="birthDate" required>
-                </div>
-                <div class="form-group">
-                    <label>身高 (cm)</label>
-                    <input type="number" id="height" placeholder="请输入身高" step="0.1">
-                </div>
-                <div class="form-group">
-                    <label>体重 (kg)</label>
-                    <input type="number" id="weight" placeholder="请输入体重" step="0.1">
-                </div>
-                <div class="form-group">
-                    <label>备注</label>
-                    <textarea id="studentNotes" placeholder="其他需要记录的信息..." rows="3"></textarea>
-                </div>
-                <button type="submit" class="btn-primary">保存信息</button>
-            </form>
-        </section>
-
-        <!-- 主页（推荐和记录） -->
-        <section id="homeScreen" class="screen">
-            <!-- 简化的学生信息 -->
-            <div class="student-card-mini" id="studentCard">
-                <div class="student-info-mini">
-                    <div class="student-avatar-mini">👶</div>
-                    <div class="student-details-mini">
-                        <span id="displayName">未设置</span>
-                        <span id="displayAge" class="student-age-mini">请先填写学生信息</span>
-                    </div>
-                    <button class="edit-btn-mini" onclick="showScreen('studentInfoScreen')">⚙️</button>
-                </div>
+        <div class="content">
+            <div class="intro">
+                <h2>欢迎使用教育测评系统</h2>
+                <p>
+                    我们提供两套专业的测评系统，帮助教师和家长全面了解孩子的成长发展情况，
+                    科学记录和分析孩子的学习与成长轨迹。
+                </p>
             </div>
 
-            <!-- 主要入口：日常记录 -->
-            <div class="main-action-card">
-                <button class="main-action-btn" id="dailyRecordBtn" onclick="showScreen('dailyRecordScreen')">
-                    <div class="main-action-icon">📝</div>
-                    <div class="main-action-content">
-                        <div class="main-action-title">记录活动</div>
-                        <div class="main-action-desc">快速记录孩子的日常表现</div>
-                    </div>
-                    <div class="main-action-arrow">→</div>
-                </button>
-            </div>
+            <div class="projects">
+                <a href="child-assessment/" class="project-card">
+                    <div class="project-icon">👶</div>
+                    <h3>儿童发展测评系统</h3>
+                    <p>适用于3-6岁幼儿的综合性发展测评系统</p>
+                    <ul class="project-features">
+                        <li>日常活动记录与分析</li>
+                        <li>AI智能测评助手</li>
+                        <li>多维度发展指标评估</li>
+                        <li>成长趋势可视化分析</li>
+                        <li>个性化推荐与建议</li>
+                    </ul>
+                    <span class="btn">进入系统 →</span>
+                </a>
 
-            <!-- 注意：功能入口已移至日常记录页面，避免重复 -->
-        </section>
+                <a href="student-evaluation/" class="project-card">
+                    <div class="project-icon">🎓</div>
+                    <h3>小学二年级综合评价系统</h3>
+                    <p>基于2022版新课程标准的综合素质评价系统</p>
+                    <ul class="project-features">
+                        <li>五大评价领域全覆盖</li>
+                        <li>学科素养详细评价</li>
+                        <li>评价工具包（教师/家长）</li>
+                        <li>三阶段评价报告</li>
+                        <li>数据可视化分析</li>
+                    </ul>
+                    <span class="btn">进入系统 →</span>
+                </a>
+            </div>
+        </div>
 
-        <!-- 测评记录页面（对话式） -->
-        <section id="assessmentScreen" class="screen">
-            <div class="screen-header">
-                <button class="back-btn" onclick="exitAssessment()">← 返回</button>
-                <h2>AI测评助手</h2>
-                <div class="progress-indicator" id="progressIndicator">
-                    <span id="progressText">0/0</span>
-                </div>
-            </div>
-            
-            <!-- 进度条和阶段显示 -->
-            <div class="process-header">
-                <div class="progress-bar-container">
-                    <div class="progress-bar-fill" id="progressBarFill"></div>
-                </div>
-                <div class="process-info">
-                    <div class="current-stage" id="currentStage">
-                        <span class="stage-label">当前阶段：</span>
-                        <span class="stage-value" id="stageValue">准备中...</span>
-                    </div>
-                    <div class="domain-progress" id="domainProgress">
-                        <!-- 领域进度将动态生成 -->
-                    </div>
-                </div>
-            </div>
-            
-            <!-- 对话区域 -->
-            <div class="chat-container" id="chatContainer">
-                <div class="chat-messages" id="chatMessages">
-                    <!-- 对话消息将动态添加 -->
-                </div>
-            </div>
-
-            <!-- 输入区域 -->
-            <div class="chat-input-area" id="chatInputArea">
-                <div class="quick-actions" id="quickActions">
-                    <!-- 快速操作按钮 -->
-                </div>
-                <div class="input-wrapper">
-                    <textarea id="chatInput" placeholder="输入备注或描述..." rows="1"></textarea>
-                    <button class="send-btn" id="sendBtn" onclick="sendMessage()">发送</button>
-                </div>
-            </div>
-        </section>
-
-        <!-- 日常记录页面 -->
-        <section id="dailyRecordScreen" class="screen">
-            <!-- 合并的顶部导航 -->
-            <div class="merged-header">
-                <div class="merged-nav-content">
-                    <h1 class="merged-app-title">日常活动记录</h1>
-                    <button class="nav-btn-mini" onclick="showScreen('studentInfoScreen')" title="设置">⚙️</button>
-                </div>
-            </div>
-            
-            <div class="daily-record-container">
-                <!-- 功能入口（一行） -->
-                <div class="function-row">
-                    <button class="function-btn-compact start-assessment-btn" id="startAssessmentBtnCompact">
-                        <span class="function-icon-compact">📋</span>
-                        <span class="function-title-compact">完整测评</span>
-                    </button>
-                    <button class="function-btn-compact" id="recommendationBtn">
-                        <span class="function-icon-compact">💡</span>
-                        <span class="function-title-compact">推荐</span>
-                    </button>
-                    <button class="function-btn-compact" id="assessmentRecordsBtn">
-                        <span class="function-icon-compact">📊</span>
-                        <span class="function-title-compact">记录</span>
-                    </button>
-                    <button class="function-btn-compact" id="multiAnalysisBtn">
-                        <span class="function-icon-compact">📈</span>
-                        <span class="function-title-compact">趋势</span>
-                    </button>
-                </div>
-
-                <!-- 快速活动选项（可滑动） -->
-                <div class="quick-activity-slider" id="quickActivitySlider">
-                    <!-- 天空动画层 -->
-                    <div class="sky-animation"></div>
-                    <div class="slider-header">
-                        <span class="slider-title">一天的活动</span>
-                        <span class="slider-time" id="currentTimeDisplay">早上</span>
-                    </div>
-                    <div class="activity-slider-container">
-                        <div class="activity-slider-track" id="activitySliderTrack">
-                            <!-- 快速选项将动态生成 -->
-                        </div>
-                    </div>
-                    <div class="slider-indicators" id="sliderIndicators">
-                        <!-- 滑动指示器 -->
-                    </div>
-                </div>
-
-                <!-- 活动描述输入 -->
-                <div class="activity-input-section" id="activityInputSection">
-                    <label class="section-label">📝 描述一下孩子的活动</label>
-                    <div class="input-with-actions">
-                        <textarea 
-                            id="activityDescription" 
-                            class="activity-input" 
-                            placeholder="例如：今天在公园玩了滑梯，能够独立上下，动作很协调..."
-                            rows="3"></textarea>
-                        <div class="input-actions">
-                            <button class="action-btn-secondary" onclick="clearActivityInput()">清空</button>
-                            <button class="btn-primary" id="analyzeActivityBtn" onclick="analyzeActivity()">
-                                <span id="analyzeBtnText">分析</span>
-                                <span id="analyzeBtnLoading" class="loading-spinner" style="display: none;">⏳</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 匹配的指标 -->
-                <div class="matched-indicators-section" id="matchedIndicatorsSection" style="display: none;">
-                    <div class="section-header">
-                        <h3>🎯 相关指标</h3>
-                        <span class="matched-count" id="matchedCount">0 个指标</span>
-                    </div>
-                    <div class="matched-indicators-list" id="matchedIndicatorsList">
-                        <!-- 匹配的指标将动态生成 -->
-                    </div>
-                    <button class="btn-primary btn-large" id="saveDailyRecordBtn" onclick="saveDailyRecord()" style="display: none;">
-                        保存记录
-                    </button>
-                </div>
-
-                <!-- 最近日常记录 -->
-                <div class="recent-daily-records">
-                    <h3>📅 最近记录</h3>
-                    <div id="recentDailyRecordsList" class="daily-records-list">
-                        <p class="empty-state">暂无日常记录</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- 评估结果页面 -->
-        <section id="resultScreen" class="screen">
-            <div class="screen-header">
-                <button class="back-btn" onclick="goBack()">← 返回</button>
-                <h2>评估结果</h2>
-            </div>
-            <div class="result-container" id="resultContainer">
-                <!-- 结果内容由JavaScript动态生成 -->
-            </div>
-        </section>
-
-        <!-- 评估记录列表页面 -->
-        <section id="assessmentRecordsScreen" class="screen">
-            <div class="screen-header">
-                <button class="back-btn" onclick="goBack()">← 返回</button>
-                <h2>评估记录</h2>
-            </div>
-            <div class="records-container" id="recordsContainer">
-                <!-- 记录列表将动态生成 -->
-            </div>
-        </section>
-
-        <!-- 多次评估分析页面 -->
-        <section id="multiAnalysisScreen" class="screen">
-            <div class="screen-header">
-                <button class="back-btn" onclick="goBack()">← 返回</button>
-                <h2>趋势分析</h2>
-            </div>
-            <div class="analysis-container" id="analysisContainer">
-                <!-- 分析内容将动态生成 -->
-            </div>
-        </section>
-    </main>
-
-    <script src="config.js"></script>
-    <script src="app.js"></script>
+        <div class="footer">
+            <p>© 2024 教育测评系统 | 让每个孩子的成长都被看见</p>
+        </div>
+    </div>
 </body>
 </html>
-

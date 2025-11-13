@@ -123,12 +123,13 @@ body {
 
 .top-header {
     background: white;
-    padding: 15px 30px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    padding: 18px 32px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
     display: flex;
     align-items: center;
     justify-content: space-between;
     z-index: 100;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .mobile-menu-btn {
@@ -145,8 +146,11 @@ body {
 }
 
 .header-info h1 {
-    font-size: 1.5em;
-    margin-bottom: 5px;
+    font-size: 1.6em;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: var(--dark-text);
+    letter-spacing: -0.3px;
 }
 
 .breadcrumb {
@@ -216,32 +220,37 @@ body {
 
 .card {
     background: white;
-    border-radius: 15px;
-    box-shadow: var(--shadow);
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
     overflow: hidden;
-    transition: var(--transition);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .card:hover {
-    box-shadow: var(--shadow-hover);
-    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.15);
+    transform: translateY(-4px);
+    border-color: rgba(102, 126, 234, 0.2);
 }
 
 .card-header {
-    padding: 20px;
+    padding: 22px 24px;
     border-bottom: 1px solid var(--border-color);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    background: linear-gradient(to bottom, #fafbfc 0%, #ffffff 100%);
 }
 
 .card-header h3 {
-    font-size: 1.1em;
+    font-size: 1.15em;
     color: var(--dark-text);
+    font-weight: 600;
+    letter-spacing: -0.2px;
 }
 
 .card-body {
-    padding: 20px;
+    padding: 24px;
 }
 
 .btn-link {

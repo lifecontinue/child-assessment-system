@@ -4,6 +4,20 @@
     box-sizing: border-box;
 }
 
+/* 隐藏浏览器扩展注入的元素 */
+#glmos-main-content {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    width: 0 !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    left: -9999px !important;
+}
+
+/* 隐藏固定定位的底部控制栏（仅针对扩展注入的元素，通过 JavaScript 处理） */
+
 :root {
     /* Minimalist Color Palette */
     --bg-color: #FAFAFA;
@@ -1724,7 +1738,7 @@ body {
 /* 日常记录页面 */
 .daily-record-container {
     padding: 20px;
-    padding-bottom: 40px;
+    padding-bottom: 20px;
 }
 
 .daily-record-container .function-grid {

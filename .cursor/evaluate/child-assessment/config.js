@@ -19,8 +19,16 @@
         anonKey: w.SUPABASE_ANON_KEY || fromProcess('SUPABASE_ANON_KEY') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ta2p6aHFvbm1keWdoeWR2ZHl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NDE1NzYsImV4cCI6MjA3ODUxNzU3Nn0.HKcwvEzCjocdGl-jAF0imGCwhDtjh1iqR2N5tNrvubY'
     };
 
+    // DeepSeek API 配置
+    const DEEPSEEK_CONFIG = {
+        apiKey: w.DEEPSEEK_API_KEY || fromProcess('DEEPSEEK_API_KEY') || 'sk-4b7a25e63c934e668f0da6199e97d441',
+        apiUrl: 'https://api.deepseek.com/v1/chat/completions',
+        model: 'deepseek-chat'
+    };
+
     // 暴露到 window，供其他脚本访问
     w.SUPABASE_CONFIG = SUPABASE_CONFIG;
+    w.DEEPSEEK_CONFIG = DEEPSEEK_CONFIG;
 })();
 
 // 初始化 Supabase 客户端
